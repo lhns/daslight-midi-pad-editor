@@ -15,7 +15,9 @@ export class AppRoot extends LitElement {
     :host {
       display: grid;
       grid-template-rows: auto 1fr;
-      min-height: 100vh;
+      height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
     }
     main {
       display: grid;
@@ -25,7 +27,11 @@ export class AppRoot extends LitElement {
       overflow: hidden;
     }
     @media (max-width: 700px) {
-      :host { min-height: 100dvh; }
+      :host {
+        height: auto;
+        min-height: 100dvh;
+        overflow: visible;
+      }
       main {
         grid-template-columns: 1fr;
         grid-template-rows: auto auto;
