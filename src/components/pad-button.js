@@ -26,12 +26,18 @@ export class PadButton extends LitElement {
       position: relative;
       box-sizing: border-box;
     }
-    :host([bound="false"]) { opacity: 0.35; }
+    :host([bound="false"]) { opacity: 0.65; }
     :host([selected]) { outline: 2px solid var(--accent); outline-offset: 1px; }
     .stripes {
       display: grid;
       grid-template-rows: repeat(var(--stripe-count, 3), 1fr);
       width: 100%; height: 100%;
+    }
+    .unmapped {
+      position: absolute;
+      inset: 15%;
+      pointer-events: none;
+      filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.7));
     }
     .stripe { width: 100%; height: 100%; }
     .stripe.flash { animation: flash 0.5s steps(2, end) infinite; }
@@ -53,6 +59,12 @@ export class PadButton extends LitElement {
       >
         ${visible.map((c) => stripe(states[c]))}
       </div>
+      ${this.bound === false ? html`
+        <svg class="unmapped" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="#ef4444" stroke-width="2.5"></circle>
+          <line x1="5.5" y1="18.5" x2="18.5" y2="5.5" stroke="#ef4444" stroke-width="2.5"></line>
+        </svg>
+      ` : null}
     `;
   }
 

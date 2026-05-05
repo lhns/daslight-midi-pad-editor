@@ -43,6 +43,32 @@ describe('<pad-button>', () => {
     expect(stripes[1].classList.contains('flash')).to.equal(true);
   });
 
+  it('renders the unmapped marker SVG when bound=false', async () => {
+    const el = await fixture(html`
+      <pad-button
+        .addr=${{ id: '1,1', kind: 'grid' }}
+        .states=${{ off: null, on: null, fade: null }}
+      ></pad-button>
+    `);
+    // Lit boolean property defaulting: ?bound omitted → undefined → host.bound === false after reflect.
+    el.bound = false;
+    await el.updateComplete;
+    const svg = el.shadowRoot.querySelector('svg.unmapped');
+    expect(svg).to.exist;
+    expect(svg.getAttribute('aria-hidden')).to.equal('true');
+  });
+
+  it('does not render the marker when bound=true', async () => {
+    const el = await fixture(html`
+      <pad-button
+        bound
+        .addr=${{ id: '1,1', kind: 'grid' }}
+        .states=${{ off: null, on: null, fade: null }}
+      ></pad-button>
+    `);
+    expect(el.shadowRoot.querySelector('svg.unmapped')).to.equal(null);
+  });
+
   it('reflects selected attribute', async () => {
     const el = await fixture(html`<pad-button selected .addr=${{ id: '1,1', kind: 'grid' }} .states=${{ off: null, on: null, fade: null }}></pad-button>`);
     expect(el.hasAttribute('selected')).to.equal(true);
