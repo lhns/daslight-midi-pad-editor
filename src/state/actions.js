@@ -42,7 +42,9 @@ export function setButtonState(addrId, controlState, stateId) {
   store.setState({ model: { ...model } });
 }
 
-export function applyToSelection(controlState, stateId) {
+// Apply a fully-formed stateId to the given control state on every selected
+// button. Used by paste paths; not for picker clicks (those edit per-axis).
+export function applyStateToSelection(controlState, stateId) {
   const { model, selection } = store.getState();
   for (const id of selection) {
     const m = model.buttons.get(id);
@@ -55,6 +57,33 @@ export function applyToSelection(controlState, stateId) {
   }
   store.setState({ model: { ...model } });
 }
+
+// Edit just one axis (color or mode) on every selected button, preserving
+// the other axis per-button. Skips buttons whose allowedColorIds rejects the
+// new color rather than forcing a constraint break.
+export function setAxisOnSelection(controlState, axis, value) {
+  const { model, selection, profile } = store.getState();
+  if (!profile) return;
+  for (const id of selection) {
+    const m = model.buttons.get(id);
+    if (!m?.bound) continue;
+    const cur = m.states[controlState]?.stateId ?? profile.defaultStateId;
+    let { colorId, modeId } = profile.decompose(cur);
+    if (axis === 'color') colorId = value;
+    else if (axis === 'mode') modeId = value;
+    if (!m.addr.allowedColorIds.includes(colorId)) continue;
+    const next = profile.compose(colorId, modeId, m.addr);
+    m.states[controlState] = {
+      stateId: next,
+      raw: m.states[controlState]?.raw ?? null,
+      dirty: true,
+    };
+  }
+  store.setState({ model: { ...model } });
+}
+
+// Backwards-compat shim used by current pasteToSelection / older callers.
+export const applyToSelection = applyStateToSelection;
 
 export function copyFromButton(addrId) {
   const { model } = store.getState();

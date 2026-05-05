@@ -4,10 +4,9 @@ import { LitElement, html, css } from 'lit';
 // of swatches with the modeAxis below. Disabled state for swatches whose id
 // isn't in `allowedColorIds`.
 //
-// Note: this version still composes a single 'state-pick' event for backward
-// compat with the current settings panel. The next commit splits picks into
-// separate color-pick / mode-pick events to fix the mode-overrides-color bug
-// in mixed selections.
+// Picks are emitted per-axis (`color-pick` / `mode-pick`) so the consuming
+// settings panel can edit one axis at a time across a mixed selection
+// without forcing the other axis to a fallback value.
 export class ColorPalette extends LitElement {
   static properties = {
     profile: { attribute: false },
@@ -58,7 +57,7 @@ export class ColorPalette extends LitElement {
             title=${c.label}
             ?disabled=${!allowedColors.has(c.id)}
             style=${`background:${c.hex}`}
-            @click=${() => this._pickColor(c.id, sel)}
+            @click=${() => this._pickColor(c.id)}
           ></button>
         `)}
       </div>
@@ -69,7 +68,7 @@ export class ColorPalette extends LitElement {
             <button
               type="button"
               class=${`mode-btn ${sel?.modeId === m.id ? 'selected' : ''}`}
-              @click=${() => this._pickMode(m.id, sel)}
+              @click=${() => this._pickMode(m.id)}
             >${m.label}</button>
           `)}
         </div>
@@ -83,18 +82,11 @@ export class ColorPalette extends LitElement {
     catch { return null; }
   }
 
-  _pickColor(colorId, sel) {
-    const modeId = sel?.modeId ?? this.profile.defaultModeId;
-    this._emit(this.profile.compose(colorId, modeId));
+  _pickColor(colorId) {
+    this.dispatchEvent(new CustomEvent('color-pick', { detail: { colorId }, bubbles: true, composed: true }));
   }
-
-  _pickMode(modeId, sel) {
-    const colorId = sel?.colorId ?? this.profile.defaultColorId;
-    this._emit(this.profile.compose(colorId, modeId));
-  }
-
-  _emit(stateId) {
-    this.dispatchEvent(new CustomEvent('state-pick', { detail: { stateId }, bubbles: true, composed: true }));
+  _pickMode(modeId) {
+    this.dispatchEvent(new CustomEvent('mode-pick', { detail: { modeId }, bubbles: true, composed: true }));
   }
 }
 

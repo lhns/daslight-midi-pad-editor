@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { store } from '../state/store.js';
-import { applyToSelection, copyFromButton, pasteToSelection } from '../state/actions.js';
+import { setAxisOnSelection, copyFromButton, pasteToSelection } from '../state/actions.js';
 import './color-palette.js';
 
 const CONTROL_LABELS = { off: 'Off', on: 'On', fade: 'Fade' };
@@ -98,7 +98,8 @@ export class SettingsPanel extends LitElement {
           .profile=${profile}
           .allowedColorIds=${allowedColorIds}
           .selectedStateId=${sharedStateId ?? ''}
-          @state-pick=${(e) => applyToSelection(ctrl, e.detail.stateId)}
+          @color-pick=${(e) => setAxisOnSelection(ctrl, 'color', e.detail.colorId)}
+          @mode-pick=${(e) => setAxisOnSelection(ctrl, 'mode', e.detail.modeId)}
         ></color-palette>
       </section>
 
