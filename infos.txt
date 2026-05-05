@@ -1,0 +1,20 @@
+OUT/OUT1/OUT2 String:
+AAA:B:CC:D:MINIIN2
+
+Meaning:
+AAA: indicated the button (section of the button) - should not be changed!
+B: LED flashing-mode (0 on, 1 flashing)
+CC: indicated the button (exact button), where the second letter indicates the column - should not be changed!
+D: LED color-code
+
+Explanations:
+OUT is the LED button-status when Off
+OUT1 is the LED status when the button-status is On
+OUT2 is the LED status when the button-status is Transitioning
+
+------------
+
+Rules
+- Button LEDs on every Column in the list should be identical, following the button-color-mapping.
+- LED color-code should be always the same for button-status Off, On and Transitioning
+- LED flashing-mode should be on for button-status Off; LED flashing-mode should be flashing for button-status On and Transitioning
