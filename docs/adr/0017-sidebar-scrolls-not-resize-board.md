@@ -1,7 +1,8 @@
 # 17. Sidebar scrolls; the board never resizes from panel content
 
 ## Status
-Accepted.
+Accepted. **Updated** — the first cut was incomplete; the final fix
+hard-caps the layout to the viewport on desktop.
 
 ## Context
 The settings panel has three accordion sections (one per control
@@ -45,3 +46,43 @@ page is the scroll context.
 - The CSS pattern (constrain ancestors with `min-height: 0`,
   put `overflow-y: auto` on the leaf that should scroll) is reusable
   for any future right-side overlay.
+
+## Update — full fix
+
+The above was insufficient. `<app-root>` declared `min-height: 100vh`
+(not `height`), and `<body>` had `min-height: 100vh` with no overflow
+lock. With panel content taller than the viewport, the host grew past
+100vh, the `1fr` row in `<main>` grew with it, the page itself
+gained a scrollbar, and `<settings-panel>`'s internal `overflow-y:
+auto` never engaged because its ancestor was no longer bounded.
+
+Final layout chain (desktop):
+
+```
+<html>, <body> { height: 100%; overflow: hidden; }   /* style.css */
+<app-root> :host {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100dvh;                                    /* hard cap */
+  min-height: 0;
+  overflow: hidden;
+}
+<main> { display: grid; grid-template-columns: 1fr auto;
+         min-height: 0; height: 100%; overflow: hidden; }
+.pad-area { overflow: auto; min-width: 0; min-height: 0; }
+<settings-panel> :host { height: 100%; max-height: 100%;
+                          min-height: 0; overflow-y: auto; }
+```
+
+On mobile (`max-width: 700px`), every layer releases the lock:
+`html`/`body` use `overflow: auto`, the host uses `min-height:
+100dvh; height: auto`, and `<main>` switches to `overflow: visible;
+height: auto`. The page becomes the scroll context and the panel
+grows naturally below the pad.
+
+A `test/components/sidebar-scroll.test.js` integration test
+reconstructs the full chain in a constrained 600×1024 box and asserts
+the panel scrolls internally, the pad area's height is unchanged when
+all three accordions open, and the container has no page scroll. The
+prior solo-panel test couldn't catch the regression because the bug
+only emerges when the sibling pad-area is also in the picture.
