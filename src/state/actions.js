@@ -99,7 +99,9 @@ export function setAxisOnSelection(controlState, axis, value) {
 // Backwards-compat shim used by current pasteToSelection / older callers.
 export const applyToSelection = applyStateToSelection;
 
-export function copyFromButton(addrId) {
+// Copy all three control states (off/on/fade) from a single button into the
+// clipboard. Replaces the clipboard entirely.
+export function copyAll(addrId) {
   const { model } = store.getState();
   const m = model.buttons.get(addrId);
   if (!m?.bound) return;
@@ -112,7 +114,20 @@ export function copyFromButton(addrId) {
   });
 }
 
-export function pasteToSelection() {
+// Copy just one control state from a single button into the clipboard,
+// preserving any other slots already in the clipboard.
+export function copyMode(addrId, controlState) {
+  const { model, clipboard } = store.getState();
+  const m = model.buttons.get(addrId);
+  if (!m?.bound) return;
+  const stateId = m.states[controlState]?.stateId ?? null;
+  store.setState({
+    clipboard: { ...(clipboard ?? {}), [controlState]: stateId },
+  });
+}
+
+// Paste every populated clipboard slot to every selected button.
+export function pasteAll() {
   const { model, selection, clipboard } = store.getState();
   if (!clipboard) return;
   for (const id of selection) {
@@ -129,6 +144,26 @@ export function pasteToSelection() {
   }
   store.setState({ model: { ...model } });
 }
+
+// Paste just one slot to every selected button.
+export function pasteMode(controlState) {
+  const { model, selection, clipboard } = store.getState();
+  if (!clipboard || clipboard[controlState] == null) return;
+  for (const id of selection) {
+    const m = model.buttons.get(id);
+    if (!m?.bound) continue;
+    m.states[controlState] = {
+      stateId: clipboard[controlState],
+      raw: m.states[controlState]?.raw ?? null,
+      dirty: true,
+    };
+  }
+  store.setState({ model: { ...model } });
+}
+
+// Backwards-compat aliases for callers that still reference the old names.
+export const copyFromButton = copyAll;
+export const pasteToSelection = pasteAll;
 
 export function fixDeviceOut() {
   const { document: doc, profile, validation } = store.getState();
