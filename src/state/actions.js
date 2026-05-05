@@ -166,6 +166,34 @@ export function pasteMode(controlState) {
 export const copyFromButton = copyAll;
 export const pasteToSelection = pasteAll;
 
+// Copy only the visible-control-state slots from the (first bound) selected
+// button — for keyboard Ctrl+C, where the user's intent is filtered by what
+// they have on screen via the pills. Slots not in visibleControlStates are
+// not written to the clipboard.
+export function copyVisible() {
+  const { selection, model, visibleControlStates } = store.getState();
+  if (!model) return;
+  const id = [...selection].find((x) => model.buttons.get(x)?.bound);
+  if (!id) return;
+  const m = model.buttons.get(id);
+  const clip = {};
+  for (const ctrl of visibleControlStates) {
+    clip[ctrl] = m.states[ctrl]?.stateId ?? null;
+  }
+  store.setState({ clipboard: clip });
+}
+
+// Paste only the slots in the intersection of the clipboard and the current
+// pill filter. Slots present in the clipboard but currently hidden are
+// ignored; visible slots not in the clipboard are skipped.
+export function pasteVisible() {
+  const { clipboard, visibleControlStates } = store.getState();
+  if (!clipboard) return;
+  for (const ctrl of visibleControlStates) {
+    if (clipboard[ctrl] != null) pasteMode(ctrl);
+  }
+}
+
 export function fixDeviceOut() {
   const { document: doc, profile, validation } = store.getState();
   if (!doc || !profile || !validation) return;

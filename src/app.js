@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { store } from './state/store.js';
 import { installGlobalSync } from './lib/anim-sync.js';
+import { copyVisible, pasteVisible } from './state/actions.js';
 import './components/drop-zone.js';
 import './components/toolbar.js';
 import './components/launchpad-grid.js';
@@ -58,10 +59,17 @@ export class AppRoot extends LitElement {
     super();
     this._state = store.getState();
     this._unsub = store.subscribe((s) => { this._state = s; });
+    this._onKey = (e) => handleKeyShortcut(e);
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener('keydown', this._onKey);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    window.removeEventListener('keydown', this._onKey);
     this._unsub?.();
   }
 
@@ -89,3 +97,20 @@ export class AppRoot extends LitElement {
 customElements.define('app-root', AppRoot);
 
 installGlobalSync();
+
+function handleKeyShortcut(e) {
+  if (!(e.ctrlKey || e.metaKey)) return;
+  // Skip if the user is typing in a form control.
+  const t = document.activeElement;
+  if (t?.isContentEditable) return;
+  const tag = t?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const key = e.key?.toLowerCase();
+  if (key === 'c') {
+    copyVisible();
+    e.preventDefault();
+  } else if (key === 'v') {
+    pasteVisible();
+    e.preventDefault();
+  }
+}

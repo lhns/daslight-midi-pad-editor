@@ -1,6 +1,6 @@
 import { expect } from '@open-wc/testing';
 import { store } from '../../src/state/store.js';
-import { setAxisOnSelection, applyStateToSelection, toggleControlStateVisibility } from '../../src/state/actions.js';
+import { setAxisOnSelection, applyStateToSelection, toggleControlStateVisibility, copyVisible, pasteVisible } from '../../src/state/actions.js';
 import { profile as apcMini } from '../../src/devices/akai-apc-mini/profile.js';
 import { profile as lpMk3 } from '../../src/devices/launchpad-mini-mk3/profile.js';
 
@@ -102,6 +102,62 @@ describe('toggleControlStateVisibility', () => {
     store.setState({ visibleControlStates: new Set(['on']) });
     toggleControlStateVisibility('on');
     expect([...store.getState().visibleControlStates]).to.deep.equal(['on']);
+  });
+});
+
+describe('copyVisible / pasteVisible (Ctrl+C / Ctrl+V honoring pill filter)', () => {
+  afterEach(() => reset());
+
+  it('copyVisible only writes the visible slots into the clipboard', () => {
+    const id = '5,3';
+    loadModel(apcMini, new Map([[id, { off: 'red', on: 'green', fade: 'yellow' }]]));
+    store.setState({ visibleControlStates: new Set(['on']) });
+    copyVisible();
+    expect(store.getState().clipboard).to.deep.equal({ on: 'green' });
+  });
+
+  it('pasteVisible only writes the slots that are both in the clipboard and visible', () => {
+    const a = '5,3', b = '5,4';
+    loadModel(apcMini, new Map([
+      [a, { off: 'red', on: 'green', fade: 'yellow' }],
+      [b, { off: 'off', on: 'off', fade: 'off' }],
+    ]));
+    // copy with all three pills, then narrow to {on, fade} and paste onto b.
+    store.setState({ visibleControlStates: new Set(['off','on','fade']) });
+    copyVisible();
+    store.setState({ selection: new Set([b]), visibleControlStates: new Set(['on','fade']) });
+    pasteVisible();
+    const m = store.getState().model.buttons.get(b);
+    expect(m.states.on.stateId).to.equal('green');
+    expect(m.states.fade.stateId).to.equal('yellow');
+    expect(m.states.off.stateId).to.equal('off'); // hidden slot untouched
+  });
+
+  it('pasteVisible skips visible slots that are not in the clipboard', () => {
+    const a = '5,3', b = '5,4';
+    loadModel(apcMini, new Map([
+      [a, { off: 'red', on: 'green', fade: 'yellow' }],
+      [b, { off: 'off', on: 'off', fade: 'off' }],
+    ]));
+    store.setState({ visibleControlStates: new Set(['on']) });
+    copyVisible(); // clipboard = { on: 'green' }
+    store.setState({ selection: new Set([b]), visibleControlStates: new Set(['on','fade']) });
+    pasteVisible();
+    const m = store.getState().model.buttons.get(b);
+    expect(m.states.on.stateId).to.equal('green');
+    expect(m.states.fade.stateId).to.equal('off'); // not in clipboard, skipped
+  });
+
+  it('copyVisible falls back to the first bound button when several are selected', () => {
+    const a = '5,3', b = '5,4';
+    loadModel(apcMini, new Map([
+      [a, { on: 'red' }],
+      [b, { on: 'green' }],
+    ]));
+    store.setState({ selection: new Set([a, b]), visibleControlStates: new Set(['on']) });
+    copyVisible();
+    // Set is unordered for iteration but in V8 insertion order is preserved.
+    expect(['red', 'green']).to.include(store.getState().clipboard.on);
   });
 });
 
