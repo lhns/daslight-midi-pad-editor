@@ -15,17 +15,24 @@ export class ColorPalette extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; }
+    :host {
+      display: block;
+      --swatch-size: 26px;
+      --swatch-gap: 4px;
+      --swatch-cols: 8;
+    }
     .colors {
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 4px;
+      grid-template-columns: repeat(auto-fill, var(--swatch-size));
+      gap: var(--swatch-gap);
       margin-bottom: 8px;
+      max-width: calc(var(--swatch-cols) * var(--swatch-size) + (var(--swatch-cols) - 1) * var(--swatch-gap));
+      justify-content: start;
     }
     .modes { display: flex; gap: 4px; flex-wrap: wrap; }
     .swatch {
-      aspect-ratio: 1;
-      min-width: 22px;
+      width: var(--swatch-size);
+      height: var(--swatch-size);
       border-radius: 4px;
       border: 1px solid rgba(255,255,255,0.1);
       cursor: pointer; padding: 0; background: var(--panel-2);
