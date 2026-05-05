@@ -52,7 +52,7 @@ export class LaunchpadGrid extends LitElement {
             .states=${states}
             ?selected=${selection.has(id)}
             ?bound=${m.bound}
-            @click=${(ev) => this._onClick(ev, id, m.bound)}
+            @click=${(ev) => this._onClick(ev, id)}
           ></pad-button>
         `);
       }
@@ -62,8 +62,7 @@ export class LaunchpadGrid extends LitElement {
     return html`<div class="grid" style=${style}>${cells}</div>`;
   }
 
-  _onClick(ev, id, bound) {
-    if (!bound) return;
+  _onClick(ev, id) {
     const mode = selectionModeFromEvent(ev);
     setSelection(toggleSelection(this._state.selection, id, mode));
   }

@@ -7,8 +7,9 @@ const initialState = {
   fileName: null,        // original upload filename
   buttons: [],           // [{ addr, off, on, fade, shortcutEl }]
   selection: new Set(),  // set of button ids ("row,col")
+  selectionAnchor: null, // last plain-clicked button id (for shift-rect range)
   validation: null,      // { ok, offenders: [...] } from validate.js
-  clipboard: null,       // { off, on, fade } copied from a single button
+  clipboard: null,       // { off?, on?, fade? } — slots are optional
 };
 
 function createStore(initial) {

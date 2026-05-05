@@ -30,6 +30,15 @@ export class SettingsPanel extends LitElement {
     }
     .pill.active { outline: 2px solid var(--accent); }
     .empty { color: var(--muted); }
+    .unbound-warn {
+      background: rgba(217, 119, 6, 0.15);
+      color: var(--warn);
+      border: 1px solid rgba(217, 119, 6, 0.4);
+      border-radius: var(--radius);
+      padding: 0.5rem 0.6rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.85rem;
+    }
     .swatch { width: 22px; height: 22px; border-radius: 4px; display: inline-block; vertical-align: middle; }
     section { border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 0.75rem; }
     .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
@@ -50,6 +59,7 @@ export class SettingsPanel extends LitElement {
       return html`<h2>Inspector</h2><div class="empty">Click a button to edit. Hold Shift / Ctrl / Cmd to multi-select.</div>`;
     }
     const buttons = [...selection].map((id) => model.buttons.get(id)).filter(Boolean);
+    const unbound = buttons.filter((b) => !b.bound);
     const allowed = intersect(buttons.map((b) => b.addr.allowedStateIds));
     const ctrl = this._activeControl;
     const sharedStateId = sharedValue(buttons.map((b) => b.states[ctrl]?.stateId ?? null));
@@ -59,6 +69,12 @@ export class SettingsPanel extends LitElement {
 
     return html`
       <h2>${buttons.length === 1 ? `Button ${buttons[0].addr.id}` : `${buttons.length} buttons selected`}</h2>
+
+      ${unbound.length ? html`
+        <div class="unbound-warn">
+          ${unbound.length} of ${buttons.length} selected button(s) are not mapped to a Daslight scene — map them in Daslight first to enable LED edits.
+        </div>
+      ` : null}
 
       <div class="row">
         ${Object.entries(CONTROL_LABELS).map(([k, label]) => html`

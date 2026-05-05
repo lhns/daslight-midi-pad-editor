@@ -25,7 +25,7 @@ export class PadButton extends LitElement {
       position: relative;
       box-sizing: border-box;
     }
-    :host([bound="false"]) { opacity: 0.35; cursor: not-allowed; }
+    :host([bound="false"]) { opacity: 0.35; }
     :host([selected]) { outline: 2px solid var(--accent); outline-offset: 1px; }
     .stripes {
       display: grid;
