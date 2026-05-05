@@ -1,0 +1,133 @@
+Launchpad Mini [MK3] - recovered 7-bit LED colors
+Each channel is one of 128 PWM levels (0..127).
+Hex codes are 7-bit values mapped linearly to 8-bit display.
+
+idx  hex      7-bit (R,G,B)  name
+  0  #000000  (  0,  0,  0)    off
+  1  #525252  ( 41, 41, 41)    dark gray
+  2  #A9A9A9  ( 84, 84, 84)    gray
+  3  #FFFFFF  (127,127,127)    white
+  4  #FF5252  (127, 41, 41)    red
+  5  #FF0000  (127,  0,  0)    red
+  6  #A90000  ( 84,  0,  0)    dark red
+  7  #520000  ( 41,  0,  0)    deep red
+  8  #FFDF97  (127,111, 75)    light amber
+  9  #FF5200  (127, 41,  0)    orange
+ 10  #A91C00  ( 84, 14,  0)    dark orange
+ 11  #520800  ( 41,  4,  0)    deep red
+ 12  #FFD136  (127,104, 27)    amber
+ 13  #FFFF00  (127,127,  0)    yellow
+ 14  #A9A900  ( 84, 84,  0)    dark yellow
+ 15  #525200  ( 41, 41,  0)    deep yellow
+ 16  #A9FF36  ( 84,127, 27)    lime
+ 17  #6EFF00  ( 55,127,  0)    green
+ 18  #36A900  ( 27, 84,  0)    dark green
+ 19  #105200  (  8, 41,  0)    deep green
+ 20  #6EFF52  ( 55,127, 41)    green
+ 21  #00FF00  (  0,127,  0)    green
+ 22  #00A900  (  0, 84,  0)    dark green
+ 23  #005200  (  0, 41,  0)    deep green
+ 24  #6EFF6E  ( 55,127, 55)    green
+ 25  #00FF1C  (  0,127, 14)    green
+ 26  #00A908  (  0, 84,  4)    dark green
+ 27  #005202  (  0, 41,  1)    deep green
+ 28  #6EFF83  ( 55,127, 65)    green
+ 29  #00FF83  (  0,127, 65)    mint
+ 30  #00A936  (  0, 84, 27)    dark mint
+ 31  #005210  (  0, 41,  8)    deep mint
+ 32  #6EFFDF  ( 55,127,111)    teal
+ 33  #00FFC5  (  0,127, 98)    teal
+ 34  #00A96E  (  0, 84, 55)    dark mint
+ 35  #005226  (  0, 41, 19)    deep mint
+ 36  #6EDFFF  ( 55,111,127)    cyan
+ 37  #00D1FF  (  0,104,127)    cyan
+ 38  #0078A9  (  0, 60, 84)    dark cyan
+ 39  #003652  (  0, 27, 41)    deep sky
+ 40  #6EA9FF  ( 55, 84,127)    sky
+ 41  #0078FF  (  0, 60,127)    sky
+ 42  #0036A9  (  0, 27, 84)    dark sky
+ 43  #001052  (  0,  8, 41)    deep blue
+ 44  #361CFF  ( 27, 14,127)    blue
+ 45  #0000FF  (  0,  0,127)    blue
+ 46  #0000A9  (  0,  0, 84)    dark blue
+ 47  #000052  (  0,  0, 41)    deep blue
+ 48  #8352FF  ( 65, 41,127)    indigo
+ 49  #3600FF  ( 27,  0,127)    indigo
+ 50  #1000A9  (  8,  0, 84)    dark blue
+ 51  #080052  (  4,  0, 41)    deep blue
+ 52  #FF52FF  (127, 41,127)    purple
+ 53  #FF00FF  (127,  0,127)    purple
+ 54  #A900A9  ( 84,  0, 84)    dark purple
+ 55  #520052  ( 41,  0, 41)    deep purple
+ 56  #FF5297  (127, 41, 75)    pink
+ 57  #FF006E  (127,  0, 55)    pink
+ 58  #A90036  ( 84,  0, 27)    dark pink
+ 59  #52001C  ( 41,  0, 14)    deep pink
+ 60  #FF0800  (127,  4,  0)    red
+ 61  #C55200  ( 98, 41,  0)    dark orange
+ 62  #A96E00  ( 84, 55,  0)    dark amber
+ 63  #363600  ( 27, 27,  0)    deep yellow
+ 64  #005200  (  0, 41,  0)    deep green
+ 65  #00521C  (  0, 41, 14)    deep mint
+ 66  #001C97  (  0, 14, 75)    dark blue
+ 67  #0000FF  (  0,  0,127)    blue
+ 68  #005252  (  0, 41, 41)    deep teal
+ 69  #1C00DF  ( 14,  0,111)    blue
+ 70  #83526E  ( 65, 41, 55)    deep magenta
+ 71  #1C0810  ( 14,  4,  8)    black
+ 72  #FF0000  (127,  0,  0)    red
+ 73  #DFFF36  (111,127, 27)    lime
+ 74  #D1F700  (104,123,  0)    lime
+ 75  #83FF00  ( 65,127,  0)    lime
+ 76  #08A900  (  4, 84,  0)    dark green
+ 77  #00FF83  (  0,127, 65)    mint
+ 78  #00C5FF  (  0, 98,127)    cyan
+ 79  #0036FF  (  0, 27,127)    blue
+ 80  #1C00FF  ( 14,  0,127)    blue
+ 81  #8300F7  ( 65,  0,123)    violet
+ 82  #D11CA9  (104, 14, 84)    magenta
+ 83  #360800  ( 27,  4,  0)    deep red
+ 84  #FF3600  (127, 27,  0)    orange
+ 85  #A9EF00  ( 84,119,  0)    lime
+ 86  #97FF1C  ( 75,127, 14)    lime
+ 87  #00FF00  (  0,127,  0)    green
+ 88  #52FF36  ( 41,127, 27)    green
+ 89  #83F797  ( 65,123, 75)    mint
+ 90  #52FFE7  ( 41,127,115)    teal
+ 91  #83B9FF  ( 65, 92,127)    sky
+ 92  #366EE7  ( 27, 55,115)    sky
+ 93  #976EEF  ( 75, 55,119)    indigo
+ 94  #EF1CFF  (119, 14,127)    purple
+ 95  #FF0083  (127,  0, 65)    pink
+ 96  #FF6E00  (127, 55,  0)    orange
+ 97  #DFD100  (111,104,  0)    yellow
+ 98  #B9FF00  ( 92,127,  0)    lime
+ 99  #A98300  ( 84, 65,  0)    dark yellow
+100  #523600  ( 41, 27,  0)    deep amber
+101  #005E08  (  0, 47,  4)    deep green
+102  #086E1C  (  4, 55, 14)    deep mint
+103  #101036  (  8,  8, 27)    deep blue
+104  #101C83  (  8, 14, 65)    deep blue
+105  #834410  ( 65, 34,  8)    deep orange
+106  #A90000  ( 84,  0,  0)    dark red
+107  #EF5236  (119, 41, 27)    orange
+108  #EF5E08  (119, 47,  4)    orange
+109  #FFDF1C  (127,111, 14)    yellow
+110  #C5EF36  ( 98,119, 27)    lime
+111  #97D108  ( 75,104,  4)    lime
+112  #101036  (  8,  8, 27)    deep blue
+113  #EFEF97  (119,119, 75)    light yellow
+114  #A9F7B9  ( 84,123, 92)    light mint
+115  #C5C5FF  ( 98, 98,127)    light blue
+116  #B997FF  ( 92, 75,127)    light indigo
+117  #525252  ( 41, 41, 41)    dark gray
+118  #979797  ( 75, 75, 75)    gray
+119  #EFFFFF  (119,127,127)    white
+120  #C50000  ( 98,  0,  0)    dark red
+121  #440000  ( 34,  0,  0)    deep red
+122  #10E700  (  8,115,  0)    green
+123  #005200  (  0, 41,  0)    deep green
+124  #DFD100  (111,104,  0)    yellow
+125  #523600  ( 41, 27,  0)    deep amber
+126  #D16E00  (104, 55,  0)    amber
+127  #6E0800  ( 55,  4,  0)    deep red
