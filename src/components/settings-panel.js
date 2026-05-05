@@ -22,14 +22,22 @@ export class SettingsPanel extends LitElement {
       background: var(--panel);
       border-left: 1px solid var(--border);
       padding: 1rem;
-      overflow: auto;
+      box-sizing: border-box;
+      height: 100%;
+      max-height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
     @media (max-width: 700px) {
       :host {
         width: 100%;
         max-width: 100%;
+        height: auto;
+        max-height: none;
         border-left: none;
         border-top: 1px solid var(--border);
+        overflow-y: visible;
       }
     }
     h2 { margin-top: 0; font-size: 1rem; }

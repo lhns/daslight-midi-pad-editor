@@ -21,12 +21,16 @@ export class AppRoot extends LitElement {
       display: grid;
       grid-template-columns: 1fr auto;
       min-height: 0;
+      height: 100%;
+      overflow: hidden;
     }
     @media (max-width: 700px) {
       :host { min-height: 100dvh; }
       main {
         grid-template-columns: 1fr;
         grid-template-rows: auto auto;
+        overflow: visible;
+        height: auto;
       }
     }
     .pad-area {
@@ -34,6 +38,8 @@ export class AppRoot extends LitElement {
       place-items: center;
       padding: clamp(0.5rem, 2vw, 1.5rem);
       overflow: auto;
+      min-width: 0;
+      min-height: 0;
     }
     .empty {
       display: grid;

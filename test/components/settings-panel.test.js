@@ -98,4 +98,19 @@ describe('<settings-panel>', () => {
     const warn = el.shadowRoot.querySelector('.unbound-warn');
     expect(warn).to.exist;
   });
+
+  it('scrolls internally rather than growing past its container', async () => {
+    loadModel(new Map([['5,3', { off: 'red', on: 'green', fade: 'yellow' }]]));
+    // Mount inside a 400px-tall container with overflow:hidden, mimicking <main>.
+    const wrap = await fixture(html`
+      <div style="height: 400px; overflow: hidden; display: grid; grid-template-rows: 100%;">
+        <settings-panel></settings-panel>
+      </div>
+    `);
+    const panel = wrap.querySelector('settings-panel');
+    await panel.updateComplete;
+    expect(getComputedStyle(panel).overflowY).to.equal('auto');
+    // The panel must not exceed the container height.
+    expect(panel.clientHeight).to.be.at.most(400);
+  });
 });
