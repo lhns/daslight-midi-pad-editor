@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { store } from '../state/store.js';
 import { downloadCurrent, fixDeviceOut, reset, loadFile } from '../state/actions.js';
+import { buttonStyles } from '../styles/buttons.js';
 
 export class Toolbar extends LitElement {
   static properties = {
@@ -8,26 +9,29 @@ export class Toolbar extends LitElement {
     _state: { state: true },
   };
 
-  static styles = css`
-    :host { display: block; }
-    .bar {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.6rem 1rem;
-      background: var(--panel);
-      border-bottom: 1px solid var(--border);
-    }
-    .filename { color: var(--muted); margin-left: auto; }
-    .device { color: var(--muted); font-size: 0.85rem; }
-    .banner {
-      display: flex; align-items: center; gap: 0.75rem;
-      padding: 0.6rem 1rem;
-      background: rgba(217, 119, 6, 0.15);
-      color: var(--warn);
-      border-bottom: 1px solid var(--border);
-    }
-  `;
+  static styles = [
+    buttonStyles,
+    css`
+      :host { display: block; }
+      .bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 1rem;
+        background: var(--panel);
+        border-bottom: 1px solid var(--border);
+      }
+      .filename { color: var(--muted); margin-left: auto; }
+      .device { color: var(--muted); font-size: 0.85rem; }
+      .banner {
+        display: flex; align-items: center; gap: 0.75rem;
+        padding: 0.6rem 1rem;
+        background: rgba(217, 119, 6, 0.15);
+        color: var(--warn);
+        border-bottom: 1px solid var(--border);
+      }
+    `,
+  ];
 
   constructor() {
     super();

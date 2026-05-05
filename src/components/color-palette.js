@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { buttonStyles } from '../styles/buttons.js';
 
 // Profile-driven LED state picker. Renders the profile's colorAxis as a row
 // of swatches with the modeAxis below. Disabled state for swatches whose id
@@ -14,39 +15,43 @@ export class ColorPalette extends LitElement {
     selectedStateId: { type: String },
   };
 
-  static styles = css`
-    :host {
-      display: block;
-      --swatch-size: 26px;
-      --swatch-gap: 4px;
-      --swatch-cols: 8;
-    }
-    .colors {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, var(--swatch-size));
-      gap: var(--swatch-gap);
-      margin-bottom: 8px;
-      max-width: calc(var(--swatch-cols) * var(--swatch-size) + (var(--swatch-cols) - 1) * var(--swatch-gap));
-      justify-content: start;
-    }
-    .modes { display: flex; gap: 4px; flex-wrap: wrap; }
-    .swatch {
-      width: var(--swatch-size);
-      height: var(--swatch-size);
-      border-radius: 4px;
-      border: 1px solid rgba(255,255,255,0.1);
-      cursor: pointer; padding: 0; background: var(--panel-2);
-    }
-    .swatch.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
-    .swatch.disabled { opacity: 0.18; cursor: not-allowed; }
-    .mode-btn {
-      padding: 4px 10px; font-size: 0.85rem;
-      background: var(--panel-2); border: 1px solid var(--border);
-      border-radius: var(--radius); cursor: pointer; color: inherit;
-    }
-    .mode-btn.selected { outline: 2px solid var(--accent); }
-    .axis-label { font-size: 0.75rem; color: var(--muted); margin: 4px 0; }
-  `;
+  static styles = [
+    buttonStyles,
+    css`
+      :host {
+        display: block;
+        --swatch-size: 26px;
+        --swatch-gap: 4px;
+        --swatch-cols: 8;
+      }
+      .colors {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, var(--swatch-size));
+        gap: var(--swatch-gap);
+        margin-bottom: 8px;
+        max-width: calc(var(--swatch-cols) * var(--swatch-size) + (var(--swatch-cols) - 1) * var(--swatch-gap));
+        justify-content: start;
+      }
+      .modes { display: flex; gap: 4px; flex-wrap: wrap; }
+      /* Swatches are color samples, not generic buttons — keep them locally
+         styled so the shared button rule doesn't swap their fill. */
+      .swatch {
+        width: var(--swatch-size);
+        height: var(--swatch-size);
+        min-width: 0;
+        border-radius: 4px;
+        border: 1px solid rgba(255,255,255,0.1);
+        cursor: pointer;
+        padding: 0;
+        background: var(--panel-2);
+        font-size: 0; /* override shared button font-size; cells are square */
+        line-height: 0;
+      }
+      .swatch.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
+      .swatch.disabled { opacity: 0.18; cursor: not-allowed; }
+      .axis-label { font-size: 0.75rem; color: var(--muted); margin: 4px 0; }
+    `,
+  ];
 
   render() {
     const profile = this.profile;
@@ -74,7 +79,7 @@ export class ColorPalette extends LitElement {
           ${profile.modeAxis.map((m) => html`
             <button
               type="button"
-              class=${`mode-btn ${sel?.modeId === m.id ? 'selected' : ''}`}
+              class=${sel?.modeId === m.id ? 'selected' : ''}
               @click=${() => this._pickMode(m.id)}
             >${m.label}</button>
           `)}

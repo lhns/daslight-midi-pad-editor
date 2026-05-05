@@ -4,6 +4,7 @@ import {
   setAxisOnSelection,
   copyAll, copyMode, pasteAll, pasteMode,
 } from '../state/actions.js';
+import { buttonStyles } from '../styles/buttons.js';
 import './color-palette.js';
 
 const CONTROL_LABELS = { off: 'Off', on: 'On', fade: 'Fade' };
@@ -14,7 +15,7 @@ export class SettingsPanel extends LitElement {
     _open: { state: true }, // {off:bool, on:bool, fade:bool}
   };
 
-  static styles = css`
+  static styles = [buttonStyles, css`
     :host {
       display: block;
       width: 360px;
@@ -92,7 +93,7 @@ export class SettingsPanel extends LitElement {
       margin-bottom: 0.6rem;
       font-size: 0.85rem;
     }
-  `;
+  `];
 
   constructor() {
     super();

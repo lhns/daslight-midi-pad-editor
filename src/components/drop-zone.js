@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { loadFile } from '../state/actions.js';
+import { buttonStyles } from '../styles/buttons.js';
 
 export class DropZone extends LitElement {
   static properties = {
@@ -7,23 +8,26 @@ export class DropZone extends LitElement {
     _error: { state: true },
   };
 
-  static styles = css`
-    :host { display: block; width: min(720px, 90vw); }
-    .zone {
-      border: 2px dashed var(--border);
-      border-radius: 12px;
-      padding: 4rem 2rem;
-      text-align: center;
-      background: var(--panel);
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .zone.hover { border-color: var(--accent); background: var(--panel-2); }
-    h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }
-    p { color: var(--muted); margin: 0.25rem 0; }
-    label { display: inline-block; margin-top: 1rem; }
-    input[type=file] { display: none; }
-    .error { color: var(--danger); margin-top: 1rem; white-space: pre-wrap; }
-  `;
+  static styles = [
+    buttonStyles,
+    css`
+      :host { display: block; width: min(720px, 90vw); }
+      .zone {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 4rem 2rem;
+        text-align: center;
+        background: var(--panel);
+        transition: border-color 0.15s, background 0.15s;
+      }
+      .zone.hover { border-color: var(--accent); background: var(--panel-2); }
+      h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+      p { color: var(--muted); margin: 0.25rem 0; }
+      label { display: inline-block; margin-top: 1rem; }
+      input[type=file] { display: none; }
+      .error { color: var(--danger); margin-top: 1rem; white-space: pre-wrap; }
+    `,
+  ];
 
   constructor() {
     super();

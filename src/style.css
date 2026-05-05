@@ -34,14 +34,17 @@ body {
   }
 }
 
+/* Light-DOM fallback — mirrors src/styles/buttons.js. Lit components define
+   their own (translucent tint) button rule via the shared module. */
 button {
   font: inherit;
-  color: inherit;
-  background: var(--panel-2);
-  border: 1px solid var(--border);
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--radius);
-  padding: 0.4rem 0.8rem;
+  padding: 6px 12px;
+  font-size: 0.875rem;
   cursor: pointer;
 }
-button:hover { background: var(--border); }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
+button:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(255,255,255,0.24); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }

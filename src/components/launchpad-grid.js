@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { store } from '../state/store.js';
 import { selectFromClick, toggleControlStateVisibility } from '../state/actions.js';
 import { selectionModeFromEvent } from '../lib/selection.js';
+import { buttonStyles } from '../styles/buttons.js';
 
 const CONTROL_LABELS = { off: 'Off', on: 'On', fade: 'Fade' };
 const CONTROL_ORDER = ['off', 'on', 'fade'];
@@ -10,41 +11,30 @@ import './pad-button.js';
 export class LaunchpadGrid extends LitElement {
   static properties = { _state: { state: true } };
 
-  static styles = css`
-    :host {
-      display: block;
-      --pad-size: clamp(28px, min(8vw, 7vh), 48px);
-      --pad-gap: clamp(2px, 0.5vw, 4px);
-    }
-    .filter {
-      display: flex;
-      gap: 6px;
-      justify-content: center;
-      margin-bottom: 8px;
-    }
-    .pill {
-      padding: 4px 12px;
-      border-radius: 999px;
-      background: var(--panel-2);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-    .pill[aria-pressed="true"] {
-      color: var(--fg);
-      outline: 2px solid var(--accent);
-      outline-offset: 1px;
-    }
-    .grid {
-      display: grid;
-      gap: var(--pad-gap);
-      background: var(--panel);
-      padding: clamp(6px, 1.5vw, 12px);
-      border-radius: 12px;
-      border: 1px solid var(--border);
-    }
-  `;
+  static styles = [
+    buttonStyles,
+    css`
+      :host {
+        display: block;
+        --pad-size: clamp(28px, min(8vw, 7vh), 48px);
+        --pad-gap: clamp(2px, 0.5vw, 4px);
+      }
+      .filter {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-bottom: 8px;
+      }
+      .grid {
+        display: grid;
+        gap: var(--pad-gap);
+        background: var(--panel);
+        padding: clamp(6px, 1.5vw, 12px);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+      }
+    `,
+  ];
 
   constructor() {
     super();
