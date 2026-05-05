@@ -58,6 +58,22 @@ describe('LP MK3 OUT-string codec', () => {
   });
 });
 
+describe('LP MK3 compose/decompose', () => {
+  it('compose builds composite stateId', () => {
+    expect(profile.compose('5', 'pulse')).to.equal('lp:5:pulse');
+    expect(profile.compose('0', 'static')).to.equal('lp:0:static');
+  });
+
+  it('decompose is the inverse', () => {
+    for (const colorId of ['0', '5', '13', '63']) {
+      for (const modeId of ['static', 'flash', 'pulse']) {
+        const stateId = profile.compose(colorId, modeId);
+        expect(profile.decompose(stateId)).to.deep.equal({ colorId, modeId });
+      }
+    }
+  });
+});
+
 describe('LP MK3 layout', () => {
   it('has 80 buttons (8×8 grid + 8 right + 8 top, missing logo corner)', () => {
     expect(profile.layout).to.have.length(80);
@@ -68,9 +84,9 @@ describe('LP MK3 layout', () => {
     expect(ids.size).to.equal(profile.layout.length);
   });
 
-  it('all states allowed everywhere (no per-button constraints on LP MK3)', () => {
+  it('all colors allowed everywhere (no per-button constraints on LP MK3)', () => {
     for (const b of profile.layout) {
-      expect(b.allowedStateIds).to.have.length(STATES.length);
+      expect(b.allowedColorIds).to.have.length(profile.colorAxis.length);
     }
   });
 });

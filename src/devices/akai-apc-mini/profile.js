@@ -1,5 +1,6 @@
 import { LAYOUT } from './layout.js';
 import { STATES } from './states.js';
+import { COLORS, MODES, compose, decompose } from './colors.js';
 import { codec } from './out-string.js';
 
 function matchScore(doc) {
@@ -19,8 +20,13 @@ export const profile = {
   grid: { rows: 9, cols: 9 },
   layout: LAYOUT,
   states: STATES,
+  colorAxis: COLORS,
+  modeAxis: MODES,
+  compose,
+  decompose,
   defaultStateId: 'off',
-  pickerHint: { kind: 'flat' },
+  defaultColorId: 'off',
+  defaultModeId: 'static',
   outString: codec,
   matchScore,
 };

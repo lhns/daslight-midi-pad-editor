@@ -60,7 +60,7 @@ export class SettingsPanel extends LitElement {
     }
     const buttons = [...selection].map((id) => model.buttons.get(id)).filter(Boolean);
     const unbound = buttons.filter((b) => !b.bound);
-    const allowed = intersect(buttons.map((b) => b.addr.allowedStateIds));
+    const allowedColorIds = intersect(buttons.map((b) => b.addr.allowedColorIds));
     const ctrl = this._activeControl;
     const sharedStateId = sharedValue(buttons.map((b) => b.states[ctrl]?.stateId ?? null));
     const sharedState = sharedStateId ? profile.states.find((s) => s.id === sharedStateId) : null;
@@ -96,7 +96,7 @@ export class SettingsPanel extends LitElement {
         </div>
         <color-palette
           .profile=${profile}
-          .allowedStateIds=${allowed}
+          .allowedColorIds=${allowedColorIds}
           .selectedStateId=${sharedStateId ?? ''}
           @state-pick=${(e) => applyToSelection(ctrl, e.detail.stateId)}
         ></color-palette>

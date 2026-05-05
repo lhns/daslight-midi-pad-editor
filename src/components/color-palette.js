@@ -1,105 +1,99 @@
 import { LitElement, html, css } from 'lit';
 
-// Profile-driven LED state picker.
-// pickerHint.kind = 'orthogonal': render a 2D grid (color × mode).
-// pickerHint.kind = 'flat':       render a single row of swatches.
+// Profile-driven LED state picker. Renders the profile's colorAxis as a row
+// of swatches with the modeAxis below. Disabled state for swatches whose id
+// isn't in `allowedColorIds`.
+//
+// Note: this version still composes a single 'state-pick' event for backward
+// compat with the current settings panel. The next commit splits picks into
+// separate color-pick / mode-pick events to fix the mode-overrides-color bug
+// in mixed selections.
 export class ColorPalette extends LitElement {
   static properties = {
     profile: { attribute: false },
-    allowedStateIds: { attribute: false },
+    allowedColorIds: { attribute: false },
     selectedStateId: { type: String },
   };
 
   static styles = css`
     :host { display: block; }
-    .flat { display: flex; flex-wrap: wrap; gap: 6px; }
-    .orth { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
-    .colors { display: grid; grid-template-columns: repeat(8, 24px); gap: 4px; }
-    .modes { display: grid; gap: 4px; }
+    .colors {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .modes { display: flex; gap: 4px; flex-wrap: wrap; }
     .swatch {
-      width: 24px; height: 24px; border-radius: 4px;
+      aspect-ratio: 1;
+      min-width: 22px;
+      border-radius: 4px;
       border: 1px solid rgba(255,255,255,0.1);
       cursor: pointer; padding: 0; background: var(--panel-2);
     }
     .swatch.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
-    .swatch.disabled { opacity: 0.25; cursor: not-allowed; }
-    .mode-btn { padding: 4px 8px; font-size: 0.85rem; }
+    .swatch.disabled { opacity: 0.18; cursor: not-allowed; }
+    .mode-btn {
+      padding: 4px 10px; font-size: 0.85rem;
+      background: var(--panel-2); border: 1px solid var(--border);
+      border-radius: var(--radius); cursor: pointer; color: inherit;
+    }
     .mode-btn.selected { outline: 2px solid var(--accent); }
-    .row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-    label { font-size: 0.85rem; color: var(--muted); }
+    .axis-label { font-size: 0.75rem; color: var(--muted); margin: 4px 0; }
   `;
 
   render() {
     const profile = this.profile;
     if (!profile) return null;
-    const allowed = new Set(this.allowedStateIds ?? profile.states.map((s) => s.id));
-    if (profile.pickerHint.kind === 'flat') return this._renderFlat(profile, allowed);
-    return this._renderOrthogonal(profile, allowed);
-  }
+    const allowedColors = new Set(this.allowedColorIds ?? profile.colorAxis.map((c) => c.id));
+    const sel = this._currentAxes();
 
-  _renderFlat(profile, allowed) {
     return html`
-      <div class="flat">
-        ${profile.states.map((s) => html`
+      <div class="axis-label">Color</div>
+      <div class="colors">
+        ${profile.colorAxis.map((c) => html`
           <button
             type="button"
-            class=${`swatch ${s.id === this.selectedStateId ? 'selected' : ''} ${allowed.has(s.id) ? '' : 'disabled'}`}
-            title=${s.label}
-            ?disabled=${!allowed.has(s.id)}
-            style=${`background:${s.hex}`}
-            @click=${() => this._pick(s.id)}
+            class=${`swatch ${sel?.colorId === c.id ? 'selected' : ''} ${allowedColors.has(c.id) ? '' : 'disabled'}`}
+            title=${c.label}
+            ?disabled=${!allowedColors.has(c.id)}
+            style=${`background:${c.hex}`}
+            @click=${() => this._pickColor(c.id, sel)}
           ></button>
         `)}
       </div>
+      ${profile.modeAxis.length > 1 ? html`
+        <div class="axis-label">Mode</div>
+        <div class="modes">
+          ${profile.modeAxis.map((m) => html`
+            <button
+              type="button"
+              class=${`mode-btn ${sel?.modeId === m.id ? 'selected' : ''}`}
+              @click=${() => this._pickMode(m.id, sel)}
+            >${m.label}</button>
+          `)}
+        </div>
+      ` : null}
     `;
   }
 
-  _renderOrthogonal(profile, allowed) {
-    // Use profile.palette × profile.modes if exposed (LP MK3 does this).
-    const palette = profile.palette ?? [];
-    const modes = profile.modes ?? [];
-    const split = profile.pickerHint.split;
-    const sel = this.selectedStateId ? split(profile.states.find((s) => s.id === this.selectedStateId)) : null;
-
-    return html`
-      <div class="orth">
-        <div>
-          <div class="row"><label>${profile.pickerHint.colorAxisLabel}</label></div>
-          <div class="colors">
-            ${palette.map((c) => {
-              const id = `lp:${c.index}:${sel?.mode ?? 'static'}`;
-              return html`
-                <button
-                  type="button"
-                  class=${`swatch ${this.selectedStateId === id ? 'selected' : ''}`}
-                  title=${`${c.index} ${c.name}`}
-                  style=${`background:${c.hex}`}
-                  @click=${() => this._pick(id)}
-                ></button>
-              `;
-            })}
-          </div>
-        </div>
-        <div>
-          <div class="row"><label>${profile.pickerHint.modeAxisLabel}</label></div>
-          <div class="modes">
-            ${modes.map((m) => {
-              const id = `lp:${sel?.color ?? 0}:${m.id}`;
-              return html`
-                <button
-                  type="button"
-                  class=${`mode-btn ${sel?.mode === m.id ? 'selected' : ''}`}
-                  @click=${() => this._pick(id)}
-                >${m.label}</button>
-              `;
-            })}
-          </div>
-        </div>
-      </div>
-    `;
+  _currentAxes() {
+    if (!this.selectedStateId) return null;
+    try { return this.profile.decompose(this.selectedStateId); }
+    catch { return null; }
   }
 
-  _pick(stateId) {
+  _pickColor(colorId, sel) {
+    const modeId = sel?.modeId ?? this.profile.defaultModeId;
+    this._emit(this.profile.compose(colorId, modeId));
+  }
+
+  _pickMode(modeId, sel) {
+    const colorId = sel?.colorId ?? this.profile.defaultColorId;
+    this._emit(this.profile.compose(colorId, modeId));
+  }
+
+  _emit(stateId) {
     this.dispatchEvent(new CustomEvent('state-pick', { detail: { stateId }, bubbles: true, composed: true }));
   }
 }

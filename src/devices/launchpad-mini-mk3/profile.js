@@ -3,9 +3,19 @@ import { PALETTE } from './palette.js';
 import { MODES } from './modes.js';
 import { STATES, codec, stateId, parseStateId } from './out-string.js';
 
-const ALL_STATE_IDS = STATES.map((s) => s.id);
+const COLOR_AXIS = PALETTE.map((c) => ({ id: String(c.index), label: c.name, hex: c.hex }));
+const MODE_AXIS = MODES.map((m) => ({ id: m.id, label: m.label, animation: m.id }));
+const ALL_COLOR_IDS = COLOR_AXIS.map((c) => c.id);
 
-const layout = LAYOUT.map((b) => ({ ...b, allowedStateIds: ALL_STATE_IDS }));
+const layout = LAYOUT.map((b) => ({ ...b, allowedColorIds: ALL_COLOR_IDS }));
+
+function compose(colorId, modeId /*, addr */) {
+  return stateId(Number(colorId), modeId);
+}
+function decompose(stateIdValue) {
+  const { colorIndex, modeId } = parseStateId(stateIdValue);
+  return { colorId: String(colorIndex), modeId };
+}
 
 function matchScore(doc) {
   const xml = doc.documentElement?.outerHTML ?? '';
@@ -25,19 +35,16 @@ export const profile = {
   grid: { rows: 9, cols: 9 },
   layout,
   states: STATES,
+  colorAxis: COLOR_AXIS,
+  modeAxis: MODE_AXIS,
+  compose,
+  decompose,
   defaultStateId: stateId(0, 'static'),
-  pickerHint: {
-    kind: 'orthogonal',
-    colorAxisLabel: 'Color',
-    modeAxisLabel: 'Mode',
-    split(state) {
-      const { colorIndex, modeId } = parseStateId(state.id);
-      return { color: String(colorIndex), mode: modeId };
-    },
-  },
+  defaultColorId: '0',
+  defaultModeId: 'static',
   outString: codec,
   matchScore,
-  // exposed extras for UI/tests
+  // exposed extras for legacy callers/tests
   palette: PALETTE,
   modes: MODES,
 };

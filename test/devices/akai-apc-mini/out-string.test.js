@@ -41,24 +41,24 @@ describe('APC mini layout', () => {
     expect(profile.layout).to.have.length(81);
   });
 
-  it('track row (row 1, cols 1..8) only allows red states', () => {
+  it('track row (row 1, cols 1..8) only allows red colors', () => {
     for (let col = 1; col <= 8; col++) {
       const b = profile.layout.find((x) => x.row === 1 && x.col === col);
-      expect(b.allowedStateIds).to.deep.equal(['off', 'red', 'red-blink']);
+      expect(b.allowedColorIds).to.deep.equal(['off', 'red']);
     }
   });
 
-  it('scene column (col 9, rows 2..9) only allows green states', () => {
+  it('scene column (col 9, rows 2..9) only allows green colors', () => {
     for (let row = 2; row <= 9; row++) {
       const b = profile.layout.find((x) => x.row === row && x.col === 9);
-      expect(b.allowedStateIds).to.deep.equal(['off', 'green', 'green-blink']);
+      expect(b.allowedColorIds).to.deep.equal(['off', 'green']);
     }
   });
 
   it('shift button (1,9) has no LED', () => {
     const b = profile.layout.find((x) => x.row === 1 && x.col === 9);
     expect(b.midi.note).to.equal(98);
-    expect(b.allowedStateIds).to.deep.equal(['off']);
+    expect(b.allowedColorIds).to.deep.equal(['off']);
   });
 
   it('main grid maps note correctly', () => {
