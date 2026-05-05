@@ -162,9 +162,9 @@ export class SettingsPanel extends LitElement {
             @mode-pick=${(e) => setAxisOnSelection(ctrl, 'mode', e.detail.modeId)}
           ></color-palette>
           <div class="mode-actions">
-            ${single ? html`<button @click=${() => copyMode(single.addr.id, ctrl)}>Copy ${CONTROL_LABELS[ctrl]}</button>` : null}
+            ${single ? html`<button @click=${() => copyMode(single.addr.id, ctrl)}>Copy</button>` : null}
             <button ?disabled=${!clipHas} @click=${() => pasteMode(ctrl)}>
-              Paste ${CONTROL_LABELS[ctrl]}${clipHas ? '' : ' (empty)'}
+              Paste${clipHas ? '' : ' (empty)'}
             </button>
           </div>
         </div>
