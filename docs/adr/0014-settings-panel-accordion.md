@@ -41,8 +41,21 @@ Why per-mode copy/paste?
 - More buttons in the panel, but each section's actions are scoped, so
   the screen weight is similar to the old layout.
 - The mode selector now lives below the color picker (instead of
-  beside it) — the panel is narrower, which is what enables the mobile
-  layout (ADR 0016 if/when written, currently inline in the responsive
-  commit).
+  beside it) — the panel is narrower.
 - Backwards-compat aliases `copyFromButton` and `pasteToSelection` are
   kept temporarily; they delegate to `copyAll` and `pasteAll`.
+
+## Update — control-state visibility filter (ADR 0016)
+Sections are no longer hard-wired to all three control states. The
+panel filters them through the global `visibleControlStates` set so
+the user can hide the ones they're not editing. Iteration order stays
+canonical (Off → On → Fade) and per-section copy/paste keeps working
+on the visible sections only. "Copy all" / "Paste all" still operate
+on all three slots regardless of filter — the model carries the full
+state.
+
+## Update — per-section button labels
+The labels inside each accordion are plain "Copy" / "Paste" instead of
+"Copy Off" / "Paste Off". The accordion summary already announces
+which control state is being edited, and the top-level "Copy all" /
+"Paste all" carry the distinguishing word.
