@@ -47,6 +47,57 @@ describe('<launchpad-grid> click handling', () => {
     expect(store.getState().selection.size).to.equal(1);
   });
 
+  it('plain click then shift-click produces the bounding rect', async () => {
+    loadFakeApcModel(new Set()); // selectability is independent of bound
+    const el = await fixture(html`<launchpad-grid></launchpad-grid>`);
+    await el.updateComplete;
+
+    function padFor(id) {
+      let found;
+      el.shadowRoot.querySelectorAll('pad-button').forEach((b) => {
+        const inner = b.shadowRoot.querySelector(`[aria-label="button ${id}"]`);
+        if (inner) found = b;
+      });
+      return found;
+    }
+
+    padFor('3,2').dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+    expect(store.getState().selection.has('3,2')).to.equal(true);
+    expect(store.getState().selectionAnchor).to.equal('3,2');
+
+    padFor('5,4').dispatchEvent(new MouseEvent('click', {
+      bubbles: true, composed: true, shiftKey: true,
+    }));
+    const sel = store.getState().selection;
+    // rows 3..5 × cols 2..4 = 9 buttons
+    expect(sel.size).to.equal(9);
+    expect(sel.has('3,2')).to.equal(true);
+    expect(sel.has('5,4')).to.equal(true);
+    expect(store.getState().selectionAnchor).to.equal('3,2'); // anchor preserved
+  });
+
+  it('ctrl-click toggles and updates anchor', async () => {
+    loadFakeApcModel(new Set());
+    const el = await fixture(html`<launchpad-grid></launchpad-grid>`);
+    await el.updateComplete;
+    function padFor(id) {
+      let found;
+      el.shadowRoot.querySelectorAll('pad-button').forEach((b) => {
+        const inner = b.shadowRoot.querySelector(`[aria-label="button ${id}"]`);
+        if (inner) found = b;
+      });
+      return found;
+    }
+    padFor('3,2').dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+    padFor('4,4').dispatchEvent(new MouseEvent('click', {
+      bubbles: true, composed: true, ctrlKey: true,
+    }));
+    const s = store.getState();
+    expect(s.selection.has('3,2')).to.equal(true);
+    expect(s.selection.has('4,4')).to.equal(true);
+    expect(s.selectionAnchor).to.equal('4,4');
+  });
+
   it('clicking a bound button still selects it (no regression)', async () => {
     const oneId = apcMini.layout.find((a) => a.kind === 'grid').id;
     loadFakeApcModel(new Set([oneId]));

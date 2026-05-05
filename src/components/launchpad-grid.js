@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { store } from '../state/store.js';
-import { setSelection } from '../state/actions.js';
-import { toggleSelection, selectionModeFromEvent } from '../lib/selection.js';
+import { selectFromClick } from '../state/actions.js';
+import { selectionModeFromEvent } from '../lib/selection.js';
 import './pad-button.js';
 
 export class LaunchpadGrid extends LitElement {
@@ -64,7 +64,7 @@ export class LaunchpadGrid extends LitElement {
 
   _onClick(ev, id) {
     const mode = selectionModeFromEvent(ev);
-    setSelection(toggleSelection(this._state.selection, id, mode));
+    selectFromClick(id, mode);
   }
 }
 

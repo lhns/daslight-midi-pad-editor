@@ -19,6 +19,7 @@ export async function loadFile(file) {
     fileName: file.name,
     model,
     selection: new Set(),
+    selectionAnchor: null,
     validation: v,
     clipboard: null,
   });
@@ -26,6 +27,19 @@ export async function loadFile(file) {
 
 export function setSelection(selection) {
   store.setState({ selection });
+}
+
+import { applySelectionMode } from '../lib/selection.js';
+
+// Apply a click in the grid: picks a selection mode from the event, computes
+// the next selection (and anchor) from the model layout, and writes both.
+export function selectFromClick(targetId, mode) {
+  const { model, selection, selectionAnchor } = store.getState();
+  if (!model) return;
+  const validIds = new Set(model.buttons.keys());
+  const { selection: nextSelection, anchor: nextAnchor } =
+    applySelectionMode(selection, selectionAnchor, targetId, mode, validIds);
+  store.setState({ selection: nextSelection, selectionAnchor: nextAnchor });
 }
 
 export function setButtonState(addrId, controlState, stateId) {
@@ -145,6 +159,7 @@ export function reset() {
     fileName: null,
     model: null,
     selection: new Set(),
+    selectionAnchor: null,
     validation: null,
     clipboard: null,
   });
