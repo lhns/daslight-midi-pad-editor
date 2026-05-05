@@ -8,12 +8,16 @@ export class LaunchpadGrid extends LitElement {
   static properties = { _state: { state: true } };
 
   static styles = css`
-    :host { display: block; }
+    :host {
+      display: block;
+      --pad-size: clamp(28px, min(8vw, 7vh), 48px);
+      --pad-gap: clamp(2px, 0.5vw, 4px);
+    }
     .grid {
       display: grid;
-      gap: 4px;
+      gap: var(--pad-gap);
       background: var(--panel);
-      padding: 12px;
+      padding: clamp(6px, 1.5vw, 12px);
       border-radius: 12px;
       border: 1px solid var(--border);
     }

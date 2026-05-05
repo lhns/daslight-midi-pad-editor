@@ -15,17 +15,24 @@ export class AppRoot extends LitElement {
     :host {
       display: grid;
       grid-template-rows: auto 1fr;
-      height: 100vh;
+      min-height: 100vh;
     }
     main {
       display: grid;
       grid-template-columns: 1fr auto;
       min-height: 0;
     }
+    @media (max-width: 700px) {
+      :host { min-height: 100dvh; }
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+      }
+    }
     .pad-area {
       display: grid;
       place-items: center;
-      padding: 1.5rem;
+      padding: clamp(0.5rem, 2vw, 1.5rem);
       overflow: auto;
     }
     .empty {
