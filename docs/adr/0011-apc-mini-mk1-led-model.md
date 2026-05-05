@@ -24,9 +24,20 @@ from the Launchpad Mini MK3 in three ways:
    given state (see ADR 0004).
 
 ## Decision
-- Implement the seven LED states in `src/devices/akai-apc-mini/states.js`.
-- Encode constraints in the layout (`allowedStateIds` per button).
-- The settings panel renders only allowed states for the active selection.
+- Implement the seven LED states in `src/devices/akai-apc-mini/states.js`
+  as the **internal** representation — used by the OUT codec and the
+  renderer.
+- Expose **user-facing** axes in `src/devices/akai-apc-mini/colors.js`:
+  `colorAxis = [off, green, red, yellow]`, `modeAxis = [static, flash]`.
+  `compose(colorId, modeId)` is a small lookup table that maps the two
+  axes to one of the seven internal states; `compose('off', anything)
+  === 'off'` since the off LED has no mode.
+- Encode constraints in the layout as `allowedColorIds` per button:
+  track row → `['off', 'red']`, scene column → `['off', 'green']`,
+  shift → `['off']`, main grid → all four colors.
+- The settings panel renders only allowed colors for the active
+  selection; the mode selector is universal (no APC mini button has
+  per-button mode constraints).
 
 We explicitly **do not** support the APC mini MK2 in this profile. MK2 has
 128 RGB colors via a different protocol; it should be its own profile.
@@ -36,6 +47,7 @@ We explicitly **do not** support the APC mini MK2 in this profile. MK2 has
 - <https://help.madrix.com/m5/html/madrix/hidd_akai_professional_apcmini.html>
 
 ## Consequences
-- The picker uses `pickerHint.kind = 'flat'` for APC mini.
-- Round-trip round-trips bit-exactly when nothing is touched, even where
-  Daslight chose unusual status bytes.
+- The picker is identical to the LP MK3 picker (4 colors × 2 modes
+  instead of 64 × 3) — see ADR 0013.
+- Round-trip preserves attributes the user did not touch, even where
+  Daslight chose unusual status bytes (128 vs 144).

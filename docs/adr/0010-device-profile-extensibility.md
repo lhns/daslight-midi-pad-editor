@@ -1,7 +1,9 @@
 # 10. Device profile interface
 
 ## Status
-Accepted.
+Accepted. Updated by ADR 0013 — `pickerHint`/`states` selector replaced
+by `colorAxis` × `modeAxis` + `compose`/`decompose`; `allowedStateIds`
+replaced by `allowedColorIds`.
 
 ## Context
 The same UI must drive at least two controllers (LP Mini MK3, APC mini MK1)
@@ -15,12 +17,14 @@ A `DeviceProfile` is a plain object exporting:
 - `id`, `label`, `deviceOut`, `altDeviceOut`, `eventPort`.
 - `grid: { rows, cols }` — UI grid dimensions.
 - `layout: ButtonAddr[]` — every physical button with its (row, col, kind,
-  allowedStateIds, midi).
-- `states: LedState[]` — every LED state the device can render
-  (id, label, hex, animation).
-- `defaultStateId` — used when the user clears a state.
-- `pickerHint` — `{ kind: 'orthogonal'|'flat', ... }` so the picker
-  component can render the right control without caring which device.
+  `allowedColorIds`, midi).
+- `states: LedState[]` — every internal LED state the device can render
+  (id, label, hex, animation). Used by the OUT codec and renderer.
+- `colorAxis`, `modeAxis`, `compose(colorId, modeId, addr)`,
+  `decompose(stateId)` — orthogonal user-facing axes plus the codec
+  that maps them to internal `states` (see ADR 0013).
+- `defaultStateId`, `defaultColorId`, `defaultModeId` — fallbacks used
+  when a slot is unset.
 - `outString` — `{ parse, encode }` codec.
 - `matchScore(doc) → 0..1` heuristic for auto-detection.
 
@@ -34,6 +38,6 @@ not branch on `profile.id`.
 ## Consequences
 - Adding a profile is a self-contained change, fully covered by its own
   tests.
-- `pickerHint.kind` is the one place where UI behavior conditions on the
-  device's information model. This is intentional: orthogonal palettes
-  (LP MK3) need a 2D picker, flat palettes (APC mini) don't.
+- The picker no longer branches on profile id or shape: every profile
+  has a `colorAxis` and a `modeAxis`. Profiles with a single mode
+  (`modeAxis.length === 1`) hide the mode selector automatically.
