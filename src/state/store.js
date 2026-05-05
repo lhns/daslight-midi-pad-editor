@@ -10,6 +10,7 @@ const initialState = {
   selectionAnchor: null, // last plain-clicked button id (for shift-rect range)
   validation: null,      // { ok, offenders: [...] } from validate.js
   clipboard: null,       // { off?, on?, fade? } — slots are optional
+  visibleControlStates: new Set(['off', 'on', 'fade']), // pad+panel visibility filter
 };
 
 function createStore(initial) {

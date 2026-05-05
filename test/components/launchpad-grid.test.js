@@ -24,6 +24,7 @@ function loadFakeApcModel(boundIds = new Set()) {
     selectionAnchor: null,
     validation: { ok: true, offenders: [] },
     clipboard: null,
+    visibleControlStates: new Set(['off', 'on', 'fade']),
   });
 }
 
@@ -31,8 +32,49 @@ function reset() {
   store.setState({
     document: null, profile: null, fileName: null, model: null,
     selection: new Set(), selectionAnchor: null, validation: null, clipboard: null,
+    visibleControlStates: new Set(['off', 'on', 'fade']),
   });
 }
+
+describe('<launchpad-grid> control-state filter pills', () => {
+  afterEach(() => reset());
+
+  it('renders three pills, all pressed by default', async () => {
+    loadFakeApcModel(new Set());
+    const el = await fixture(html`<launchpad-grid></launchpad-grid>`);
+    await el.updateComplete;
+    const pills = el.shadowRoot.querySelectorAll('.pill');
+    expect(pills.length).to.equal(3);
+    expect([...pills].map((p) => p.getAttribute('aria-pressed'))).to.deep.equal(['true','true','true']);
+    expect([...pills].map((p) => p.textContent.trim())).to.deep.equal(['Off','On','Fade']);
+  });
+
+  it('clicking a pill toggles its visibility and the pad-button stripe count', async () => {
+    loadFakeApcModel(new Set());
+    const el = await fixture(html`<launchpad-grid></launchpad-grid>`);
+    await el.updateComplete;
+    const offPill = el.shadowRoot.querySelectorAll('.pill')[0];
+    offPill.click();
+    await el.updateComplete;
+    expect(offPill.getAttribute('aria-pressed')).to.equal('false');
+    const pad = el.shadowRoot.querySelector('pad-button');
+    await pad.updateComplete;
+    expect(pad.shadowRoot.querySelectorAll('.stripe').length).to.equal(2);
+  });
+
+  it('cannot deselect the last active pill', async () => {
+    loadFakeApcModel(new Set());
+    const el = await fixture(html`<launchpad-grid></launchpad-grid>`);
+    await el.updateComplete;
+    const [offPill, onPill, fadePill] = el.shadowRoot.querySelectorAll('.pill');
+    offPill.click(); await el.updateComplete;
+    onPill.click(); await el.updateComplete;
+    expect(fadePill.getAttribute('aria-pressed')).to.equal('true');
+    fadePill.click(); await el.updateComplete; // would empty the set → no-op
+    expect(fadePill.getAttribute('aria-pressed')).to.equal('true');
+    expect(store.getState().visibleControlStates.has('fade')).to.equal(true);
+  });
+});
 
 describe('<launchpad-grid> click handling', () => {
   afterEach(() => reset());

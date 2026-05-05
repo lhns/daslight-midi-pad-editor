@@ -24,6 +24,7 @@ function loadModel(seed) {
     model: { buttons, shortcuts: [] },
     selection: new Set([...seed.keys()]),
     selectionAnchor: null, validation: null, clipboard: null,
+    visibleControlStates: new Set(['off', 'on', 'fade']),
   });
 }
 
@@ -31,6 +32,7 @@ function reset() {
   store.setState({
     document: null, profile: null, fileName: null, model: null,
     selection: new Set(), selectionAnchor: null, validation: null, clipboard: null,
+    visibleControlStates: new Set(['off', 'on', 'fade']),
   });
 }
 
@@ -97,6 +99,15 @@ describe('<settings-panel>', () => {
     await el.updateComplete;
     const warn = el.shadowRoot.querySelector('.unbound-warn');
     expect(warn).to.exist;
+  });
+
+  it('only renders accordion sections for visible control states (canonical order)', async () => {
+    loadModel(new Map([['5,3', { off: 'off', on: 'green', fade: 'red-blink' }]]));
+    store.setState({ visibleControlStates: new Set(['off', 'fade']) });
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    const labels = [...el.shadowRoot.querySelectorAll('.summary-label')].map((s) => s.textContent.trim());
+    expect(labels).to.deep.equal(['Off', 'Fade']);
   });
 
   it('scrolls internally rather than growing past its container', async () => {

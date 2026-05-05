@@ -8,6 +8,7 @@ export class PadButton extends LitElement {
   static properties = {
     addr: { attribute: false },
     states: { attribute: false },   // {off, on, fade} each maps to LedState | null
+    visibleControlStates: { attribute: false }, // ('off'|'on'|'fade')[]
     selected: { type: Boolean, reflect: true },
     bound: { type: Boolean, reflect: true },
   };
@@ -29,7 +30,7 @@ export class PadButton extends LitElement {
     :host([selected]) { outline: 2px solid var(--accent); outline-offset: 1px; }
     .stripes {
       display: grid;
-      grid-template-rows: 1fr 1fr 1fr;
+      grid-template-rows: repeat(var(--stripe-count, 3), 1fr);
       width: 100%; height: 100%;
     }
     .stripe { width: 100%; height: 100%; }
@@ -41,12 +42,16 @@ export class PadButton extends LitElement {
   `;
 
   render() {
-    const { off, on, fade } = this.states ?? {};
+    const visible = this.visibleControlStates ?? ['off', 'on', 'fade'];
+    const states = this.states ?? {};
     return html`
-      <div class="stripes" role="button" aria-label=${`button ${this.addr?.id}`}>
-        ${stripe(off)}
-        ${stripe(on)}
-        ${stripe(fade)}
+      <div
+        class="stripes"
+        role="button"
+        aria-label=${`button ${this.addr?.id}`}
+        style=${`--stripe-count:${visible.length}`}
+      >
+        ${visible.map((c) => stripe(states[c]))}
       </div>
     `;
   }

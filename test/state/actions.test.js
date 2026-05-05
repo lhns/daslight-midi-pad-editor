@@ -1,6 +1,6 @@
 import { expect } from '@open-wc/testing';
 import { store } from '../../src/state/store.js';
-import { setAxisOnSelection, applyStateToSelection } from '../../src/state/actions.js';
+import { setAxisOnSelection, applyStateToSelection, toggleControlStateVisibility } from '../../src/state/actions.js';
 import { profile as apcMini } from '../../src/devices/akai-apc-mini/profile.js';
 import { profile as lpMk3 } from '../../src/devices/launchpad-mini-mk3/profile.js';
 
@@ -80,6 +80,28 @@ describe('setAxisOnSelection', () => {
     setAxisOnSelection('on', 'color', '5');
     // default mode is static, so the result is lp:5:static
     expect(store.getState().model.buttons.get(a.id).states.on.stateId).to.equal('lp:5:static');
+  });
+});
+
+describe('toggleControlStateVisibility', () => {
+  afterEach(() => reset());
+
+  it('removes a state from the visible set', () => {
+    store.setState({ visibleControlStates: new Set(['off', 'on', 'fade']) });
+    toggleControlStateVisibility('off');
+    expect([...store.getState().visibleControlStates].sort()).to.deep.equal(['fade', 'on']);
+  });
+
+  it('re-adds a previously hidden state', () => {
+    store.setState({ visibleControlStates: new Set(['on', 'fade']) });
+    toggleControlStateVisibility('off');
+    expect(store.getState().visibleControlStates.has('off')).to.equal(true);
+  });
+
+  it('cannot empty the set — last toggle-off is a no-op', () => {
+    store.setState({ visibleControlStates: new Set(['on']) });
+    toggleControlStateVisibility('on');
+    expect([...store.getState().visibleControlStates]).to.deep.equal(['on']);
   });
 });
 

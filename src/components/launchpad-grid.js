@@ -1,7 +1,10 @@
 import { LitElement, html, css } from 'lit';
 import { store } from '../state/store.js';
-import { selectFromClick } from '../state/actions.js';
+import { selectFromClick, toggleControlStateVisibility } from '../state/actions.js';
 import { selectionModeFromEvent } from '../lib/selection.js';
+
+const CONTROL_LABELS = { off: 'Off', on: 'On', fade: 'Fade' };
+const CONTROL_ORDER = ['off', 'on', 'fade'];
 import './pad-button.js';
 
 export class LaunchpadGrid extends LitElement {
@@ -12,6 +15,26 @@ export class LaunchpadGrid extends LitElement {
       display: block;
       --pad-size: clamp(28px, min(8vw, 7vh), 48px);
       --pad-gap: clamp(2px, 0.5vw, 4px);
+    }
+    .filter {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .pill {
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .pill[aria-pressed="true"] {
+      color: var(--fg);
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
     }
     .grid {
       display: grid;
@@ -31,10 +54,11 @@ export class LaunchpadGrid extends LitElement {
   disconnectedCallback() { super.disconnectedCallback(); this._unsub?.(); }
 
   render() {
-    const { profile, model, selection } = this._state;
+    const { profile, model, selection, visibleControlStates } = this._state;
     if (!profile || !model) return null;
     const stateById = new Map((profile.states ?? []).map((s) => [s.id, s]));
     const { rows, cols } = profile.grid;
+    const visible = CONTROL_ORDER.filter((c) => visibleControlStates.has(c));
 
     const cells = [];
     for (let r = rows; r >= 1; r--) {
@@ -54,6 +78,7 @@ export class LaunchpadGrid extends LitElement {
           <pad-button
             .addr=${m.addr}
             .states=${states}
+            .visibleControlStates=${visible}
             ?selected=${selection.has(id)}
             ?bound=${m.bound}
             @click=${(ev) => this._onClick(ev, id)}
@@ -63,7 +88,19 @@ export class LaunchpadGrid extends LitElement {
     }
 
     const style = `grid-template-columns: repeat(${cols}, var(--pad-size, 48px)); grid-template-rows: repeat(${rows}, var(--pad-size, 48px));`;
-    return html`<div class="grid" style=${style}>${cells}</div>`;
+    return html`
+      <div class="filter" role="group" aria-label="Visible control states">
+        ${CONTROL_ORDER.map((c) => html`
+          <button
+            class="pill"
+            type="button"
+            aria-pressed=${visibleControlStates.has(c) ? 'true' : 'false'}
+            @click=${() => toggleControlStateVisibility(c)}
+          >${CONTROL_LABELS[c]}</button>
+        `)}
+      </div>
+      <div class="grid" style=${style}>${cells}</div>
+    `;
   }
 
   _onClick(ev, id) {

@@ -103,7 +103,7 @@ export class SettingsPanel extends LitElement {
   disconnectedCallback() { super.disconnectedCallback(); this._unsub?.(); }
 
   render() {
-    const { profile, model, selection, clipboard } = this._state;
+    const { profile, model, selection, clipboard, visibleControlStates } = this._state;
     if (!profile || !model) return null;
     if (selection.size === 0) {
       return html`
@@ -134,7 +134,9 @@ export class SettingsPanel extends LitElement {
         </button>
       </div>
 
-      ${['off','on','fade'].map((ctrl) => this._renderSection(ctrl, buttons, profile, allowedColorIds, single, clipboard))}
+      ${['off','on','fade']
+        .filter((c) => !visibleControlStates || visibleControlStates.has(c))
+        .map((ctrl) => this._renderSection(ctrl, buttons, profile, allowedColorIds, single, clipboard))}
     `;
   }
 

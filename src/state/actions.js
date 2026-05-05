@@ -22,6 +22,7 @@ export async function loadFile(file) {
     selectionAnchor: null,
     validation: v,
     clipboard: null,
+    visibleControlStates: new Set(['off', 'on', 'fade']),
   });
 }
 
@@ -197,5 +198,24 @@ export function reset() {
     selectionAnchor: null,
     validation: null,
     clipboard: null,
+    visibleControlStates: new Set(['off', 'on', 'fade']),
   });
+}
+
+// Toggle whether a control state's stripe is visible on the pad and its
+// accordion section is rendered in the settings panel. The filter is purely
+// a UI concern — the model still carries all three slots.
+//
+// At least one control state must remain visible; the last toggle-off is a
+// no-op so the user can never reach an empty pad.
+export function toggleControlStateVisibility(controlState) {
+  const { visibleControlStates } = store.getState();
+  const next = new Set(visibleControlStates);
+  if (next.has(controlState)) {
+    if (next.size === 1) return; // would empty the set
+    next.delete(controlState);
+  } else {
+    next.add(controlState);
+  }
+  store.setState({ visibleControlStates: next });
 }
