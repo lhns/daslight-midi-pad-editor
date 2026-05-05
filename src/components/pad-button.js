@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { syncAnimations } from '../lib/anim-sync.js';
 
 // A single launchpad button. Three horizontal stripes (top = Off, middle = On,
 // bottom = Fade). Each stripe shows the LED's display color and animates
@@ -52,6 +53,7 @@ export class PadButton extends LitElement {
 
   updated() {
     if (this.addr?.kind === 'round') this.dataset.round = '';
+    syncAnimations(this.shadowRoot);
   }
 }
 

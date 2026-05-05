@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { store } from './state/store.js';
+import { installGlobalSync } from './lib/anim-sync.js';
 import './components/drop-zone.js';
 import './components/toolbar.js';
 import './components/launchpad-grid.js';
@@ -67,3 +68,5 @@ export class AppRoot extends LitElement {
 }
 
 customElements.define('app-root', AppRoot);
+
+installGlobalSync();
