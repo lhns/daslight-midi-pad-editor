@@ -67,6 +67,9 @@ idx  hex      7-bit (R,G,B)  name
  61  #C55200  ( 98, 41,  0)    dark orange
  62  #A96E00  ( 84, 55,  0)    dark amber
  63  #363600  ( 27, 27,  0)    deep yellow
+
+nur bis hier hin die Farben verwenden. Alle weiteren Farben sind nicht notwendig für das Projekt.
+
  64  #005200  (  0, 41,  0)    deep green
  65  #00521C  (  0, 41, 14)    deep mint
  66  #001C97  (  0, 14, 75)    dark blue

@@ -11,10 +11,3 @@ Explanations:
 OUT is the LED button-status when Off
 OUT1 is the LED status when the button-status is On
 OUT2 is the LED status when the button-status is Transitioning
-
-------------
-
-Rules
-- Button LEDs on every Column in the list should be identical, following the button-color-mapping.
-- LED color-code should be always the same for button-status Off, On and Transitioning
-- LED flashing-mode should be on for button-status Off; LED flashing-mode should be flashing for button-status On and Transitioning
