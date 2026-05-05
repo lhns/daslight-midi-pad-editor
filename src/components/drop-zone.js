@@ -49,7 +49,7 @@ export class DropZone extends LitElement {
         <p>or</p>
         <label>
           <input type="file" accept=".xml,application/xml,text/xml" @change=${this._onPick} />
-          <button type="button" @click=${this._openPicker}>Choose file…</button>
+          <button type="button" class="primary" @click=${this._openPicker}>Choose file…</button>
         </label>
         ${this._error ? html`<div class="error">${this._error}</div>` : null}
       </div>

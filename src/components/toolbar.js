@@ -46,7 +46,7 @@ export class Toolbar extends LitElement {
     return html`
       <div class="bar">
         <button @click=${() => reset()}>Open another…</button>
-        <button @click=${() => downloadCurrent()}>Download XML</button>
+        <button class="primary" @click=${() => downloadCurrent()}>Download XML</button>
         <span class="device">${this._state.profile?.label ?? ''}</span>
         <span class="filename">${this.fileName ?? ''}</span>
       </div>

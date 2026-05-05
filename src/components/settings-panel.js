@@ -129,7 +129,7 @@ export class SettingsPanel extends LitElement {
       ` : null}
 
       <div class="actions">
-        ${single ? html`<button @click=${() => copyAll(single.addr.id)}>Copy all</button>` : null}
+        ${single ? html`<button class="primary" @click=${() => copyAll(single.addr.id)}>Copy all</button>` : null}
         <button ?disabled=${!clipboardHasAny} @click=${() => pasteAll()}>
           Paste all${clipboardHasAny ? '' : ' (empty)'}
         </button>
