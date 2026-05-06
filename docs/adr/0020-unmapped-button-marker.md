@@ -44,3 +44,21 @@ state, and a heavy dim made it hard to read.
 `bound=false` and absent when `bound=true`, with `aria-hidden="true"`
 so screen readers ignore it (the inspector banner is the
 spoken-channel surface for the same information).
+
+## Update — square fit on non-uniform cells
+Once profiles started declaring `gridTemplate` (ADR 0022) for
+non-square cells (the APC mini's 1.5×1 clip cells), the original
+`position: absolute; inset: 15%` approach produced an oblong SVG
+container, the inner circle stayed centered via the SVG's default
+`preserveAspectRatio: xMidYMid meet`, and the drop-shadow filter
+extended past the cell's vertical bounds — visually the icon read as
+cut off at the bottom.
+
+The marker is now wrapped in a `<div class="unmapped-wrap">` with
+`container-type: size`, and the SVG itself sizes to
+`min(70cqw, 70cqh)` on both axes. That collapses to "70% of the
+smaller of the cell's width and height" regardless of aspect ratio,
+keeping the icon square and well within visible bounds in any cell
+shape. Two new tests in `test/components/pad-button.test.js` mount a
+pad-button in a 90×60 (elongated) and a 60×60 (square) container and
+assert the SVG's bounding box is square and ~42 px on each side.

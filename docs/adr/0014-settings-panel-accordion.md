@@ -59,3 +59,21 @@ The labels inside each accordion are plain "Copy" / "Paste" instead of
 "Copy Off" / "Paste Off". The accordion summary already announces
 which control state is being edited, and the top-level "Copy all" /
 "Paste all" carry the distinguishing word.
+
+## Update — picker-row layout
+Each accordion body now lays out as `.picker-row` (flex): the
+`<color-palette>` (colors only) on the left, a vertical `.side-col`
+on the right. The side column carries the profile's mode buttons
+(when more than one mode exists), a thin divider, and the per-section
+Copy / Paste buttons.
+
+The mode selector used to sit *under* the color grid inside
+`<color-palette>` and Copy/Paste sat in their own row below. Stacked
+vertically that's three rows of content per section; with three
+sections open in a 64-swatch profile (LP MK3) the panel ran past
+1000 px tall. The 2-column layout collapses two of those rows into
+one, dropping ~80 px per section while keeping mode and actions
+discoverable next to the colors.
+
+Paste / Paste-all also dropped the trailing `(empty)` suffix — the
+disabled style is the visible source of truth.

@@ -88,3 +88,12 @@ app.
 - A future theme switch is one file: change the variables in
   `src/style.css` (and the fallbacks in `buttonStyles` if they ever
   diverge from the variables).
+
+## Update — modes are no longer a color-palette concern
+Mode buttons left `<color-palette>` and live directly in
+`<settings-panel>._renderSection`'s side column (ADR 0014 update).
+They are plain `<button>` instances with the shared style; the
+`selected` class drives the accent-tinted active state. The
+border-radius smoke test was retargeted from the picker to the panel
+side-col so it still asserts against a real mode button rendered in
+the place users see it.
