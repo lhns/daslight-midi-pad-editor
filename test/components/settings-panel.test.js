@@ -162,6 +162,19 @@ describe('<settings-panel>', () => {
     expect(pasteAll.disabled).to.equal(true);
   });
 
+  it('side-col has a "Mode" axis label above the mode buttons', async () => {
+    loadModel(new Map([['5,3', { on: 'green' }]]));
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    const sideCol = el.shadowRoot.querySelector('details .side-col');
+    const label = sideCol.querySelector('.axis-label');
+    expect(label).to.exist;
+    expect(label.textContent.trim()).to.equal('Mode');
+    // Label sits before the first mode button in DOM order.
+    const firstButton = sideCol.querySelector('button');
+    expect(label.compareDocumentPosition(firstButton) & Node.DOCUMENT_POSITION_FOLLOWING).to.be.greaterThan(0);
+  });
+
   it('clicking a side-col mode button updates the model via setAxisOnSelection', async () => {
     loadModel(new Map([['5,3', { on: 'green' }]]));
     const el = await fixture(html`<settings-panel></settings-panel>`);

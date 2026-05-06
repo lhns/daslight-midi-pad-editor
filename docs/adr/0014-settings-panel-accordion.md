@@ -77,3 +77,9 @@ discoverable next to the colors.
 
 Paste / Paste-all also dropped the trailing `(empty)` suffix — the
 disabled style is the visible source of truth.
+
+A small `.axis-label` reading "Mode" sits above the mode buttons in
+the side column, mirroring the "Color" label above the color
+swatches inside `<color-palette>`. Rendered only when
+`profile.modeAxis.length > 1` (no label when there's nothing to
+choose between).

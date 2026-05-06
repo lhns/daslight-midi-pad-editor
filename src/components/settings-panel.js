@@ -98,6 +98,11 @@ export class SettingsPanel extends LitElement {
       background: var(--border);
       margin: 4px 0;
     }
+    .axis-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin: 0 0 4px;
+    }
     .unbound-warn {
       background: rgba(217, 119, 6, 0.15);
       color: var(--warn);
@@ -184,6 +189,7 @@ export class SettingsPanel extends LitElement {
             ></color-palette>
             <div class="side-col">
               ${showModes ? html`
+                <div class="axis-label">Mode</div>
                 ${profile.modeAxis.map((m) => html`
                   <button
                     class=${selectedModeId === m.id ? 'selected' : ''}
