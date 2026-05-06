@@ -42,6 +42,7 @@ export const profile = {
   defaultStateId: stateId(0, 'static'),
   defaultColorId: '0',
   defaultModeId: 'static',
+  flashStrategy: 'off-state',
   outString: codec,
   matchScore,
   // exposed extras for legacy callers/tests

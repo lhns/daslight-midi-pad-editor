@@ -46,6 +46,12 @@
  * @property {string} defaultStateId
  * @property {string} defaultColorId
  * @property {string} defaultModeId
+ * @property {'off-state'|'black'} flashStrategy
+ *   What plays as the "other" frame of a flash/pulse animation on a stripe?
+ *   - 'off-state' (LP MK3): the static off-state color of the same button;
+ *     falls back to black if off is unset or itself animated. The off
+ *     stripe always animates against black.
+ *   - 'black' (APC mini): always black.
  * @property {OutCodec} outString
  * @property {(doc: Document) => number} matchScore   // 0..1 heuristic for auto-detection
  */

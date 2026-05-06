@@ -27,6 +27,7 @@ export const profile = {
   defaultStateId: 'off',
   defaultColorId: 'off',
   defaultModeId: 'static',
+  flashStrategy: 'black',
   outString: codec,
   matchScore,
 };
