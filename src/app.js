@@ -28,7 +28,7 @@ export class AppRoot extends LitElement {
       overflow: hidden;
     }
     main.solo { grid-template-columns: 1fr; }
-    @media (max-width: 700px) {
+    @media (max-width: 760px) {
       :host {
         height: auto;
         min-height: 100dvh;

@@ -223,6 +223,36 @@ describe('<settings-panel>', () => {
     expect(store.getState().model.buttons.get('5,3').states.on.stateId).to.equal('green-blink');
   });
 
+  it('panel host claims at least 384px even in a narrow container', async () => {
+    loadModel(new Map([['5,3', { on: 'green' }]]));
+    const wrap = await fixture(html`
+      <div style="display: grid; grid-template-columns: 300px; height: 600px;">
+        <settings-panel></settings-panel>
+      </div>
+    `);
+    const panel = wrap.querySelector('settings-panel');
+    await panel.updateComplete;
+    expect(panel.offsetWidth).to.be.at.least(384);
+  });
+
+  it('side-col buttons do not overflow their text in a narrow container', async () => {
+    loadModel(new Map([['5,3', { on: 'green' }]]));
+    const wrap = await fixture(html`
+      <div style="display: grid; grid-template-columns: 320px; height: 600px;">
+        <settings-panel></settings-panel>
+      </div>
+    `);
+    const panel = wrap.querySelector('settings-panel');
+    await panel.updateComplete;
+    const buttons = panel.shadowRoot.querySelectorAll('details .side-col button');
+    expect(buttons.length).to.be.at.least(1);
+    for (const btn of buttons) {
+      // scrollWidth equals clientWidth when text isn't overflowing.
+      // +1 px tolerance for sub-pixel browser rounding.
+      expect(btn.scrollWidth, btn.textContent.trim()).to.be.at.most(btn.clientWidth + 1);
+    }
+  });
+
   it('scrolls internally rather than growing past its container', async () => {
     loadModel(new Map([['5,3', { off: 'red', on: 'green', fade: 'yellow' }]]));
     // Mount inside a 400px-tall container with overflow:hidden, mimicking <main>.

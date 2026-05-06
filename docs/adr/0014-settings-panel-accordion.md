@@ -84,6 +84,46 @@ swatches inside `<color-palette>`. Rendered only when
 `profile.modeAxis.length > 1` (no label when there's nothing to
 choose between).
 
+## Update — pinned panel min-width
+The host previously declared `width: 360px; max-width: 40vw`. Between
+the mobile breakpoint (700 px) and 900 px (where `40vw` reaches
+360 px) the cap won and the panel shrank to 280–360 px. The picker-row
+flex then squeezed `.side-col`, whose buttons (`white-space: nowrap`)
+overflowed their text.
+
+The host now pins to `width: 384px; min-width: 384px` (no max-width
+cap). The number is the sum of the panel's intrinsic content widths:
+
+```
+swatch-grid       8 × 26 + 7 × 4   = 236
+picker-row gap                       8
+side-col content (widest button)   ~80   // ~5-char label + 24 px padding + 2 px border
+body padding      0.75rem each      24
+details border    1 px each          2
+host padding      1rem each         32
+                                  ----
+                                   382  → 384 (rounded to a multiple of 8)
+```
+
+If the swatch count, the longest mode/copy/paste label, or any of the
+paddings change, this number must be recomputed in the host CSS
+comment.
+
+The mobile breakpoint also moved from 700 → 760 px so the shell
+collapses to "panel under pad" before the desktop layout would have
+to fit the 384 px panel into a viewport that leaves only ~316 px for
+the pad. `<app-root>`, `<settings-panel>`, and `style.css` use the
+same threshold.
+
+Defense in depth: `.side-col button { min-width: max-content; flex:
+0 0 auto }` so that buttons keep their text-natural width even if
+this panel is ever embedded into an unexpected parent.
+
+Two new tests in `test/components/settings-panel.test.js` mount the
+panel inside a deliberately too-narrow container and assert
+`offsetWidth >= 384` and `scrollWidth ≤ clientWidth + 1` for every
+side-col button.
+
 ## Update — top-level Copy button honors the pill filter
 "Copy all" now calls `copyVisible()` (the same action Ctrl+C uses)
 instead of `copyAll(addrId)`, so the pill filter applies the same way

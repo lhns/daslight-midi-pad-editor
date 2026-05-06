@@ -18,8 +18,13 @@ export class SettingsPanel extends LitElement {
   static styles = [buttonStyles, css`
     :host {
       display: block;
-      width: 360px;
-      max-width: 40vw;
+      /* Min-width math (single picker-row): swatch-grid (8*26 + 7*4 = 236)
+         + picker-row gap (8) + side-col content (~80, widest button incl.
+         padding+border) + body padding (24) + details border (2) + host
+         padding (32) ≈ 382 → rounded up to 384. If swatches, button text,
+         or paddings change, recompute and update. */
+      width: 384px;
+      min-width: 384px;
       background: var(--panel);
       border-left: 1px solid var(--border);
       padding: 1rem;
@@ -30,9 +35,10 @@ export class SettingsPanel extends LitElement {
       overflow-y: auto;
       overflow-x: hidden;
     }
-    @media (max-width: 700px) {
+    @media (max-width: 760px) {
       :host {
         width: 100%;
+        min-width: 0;
         max-width: 100%;
         height: auto;
         max-height: none;
@@ -92,7 +98,13 @@ export class SettingsPanel extends LitElement {
       gap: 4px;
       min-width: 0;
     }
-    .side-col button { white-space: nowrap; }
+    .side-col button {
+      white-space: nowrap;
+      /* defense in depth: even if .side-col is squeezed by an odd parent,
+         buttons keep their text-natural width and don't overflow. */
+      min-width: max-content;
+      flex: 0 0 auto;
+    }
     .side-divider {
       height: 1px;
       background: var(--border);
