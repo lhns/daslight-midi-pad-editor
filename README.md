@@ -23,7 +23,7 @@ needs to change.
 npm install
 npm run dev      # @web/dev-server, http://localhost:8000
 npm test         # Web Test Runner + @open-wc/testing in headless Chromium
-npm run build    # produces dist/index.html — a single, self-contained file
+npm run build    # produces dist/daslight-midi-pad-editor.html — a single, self-contained file
 ```
 
 The dev server uses **import maps** to load Lit directly from a CDN — no
@@ -49,7 +49,7 @@ HTML file for distribution.
 │   └── lib/                  # shared helpers (selection logic)
 ├── test/                     # mirror of src/, *.test.js
 ├── scripts/
-│   └── build-single-html.mjs # esbuild → dist/index.html
+│   └── build-single-html.mjs # esbuild → dist/daslight-midi-pad-editor.html
 ├── docs/                     # source-of-truth references
 │   ├── task.txt              # original task brief
 │   ├── infos.txt             # OUT-string format notes

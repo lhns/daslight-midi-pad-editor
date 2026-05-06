@@ -13,7 +13,7 @@ every push and a downloadable build artifact on merges to `main`.
   `npm test`.
 - `build` runs only on `main` and on tags pushed as `v*`: builds the
   single-HTML artifact and uploads it via `actions/upload-artifact`.
-- Tag pushes (`v*`) additionally attach `dist/index.html` to a Gitea
+- Tag pushes (`v*`) additionally attach `dist/daslight-midi-pad-editor.html` to a Gitea
   release using `akkuman/gitea-release-action`.
 
 We chose **artifact upload over Pages-style hosting** because the

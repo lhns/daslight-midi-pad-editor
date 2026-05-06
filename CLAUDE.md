@@ -9,7 +9,7 @@ project layout.
 ## Commands
 - `npm run dev` — start `@web/dev-server` on `localhost:8000`.
 - `npm test` — Web Test Runner (headless Chromium) + `@open-wc/testing`.
-- `npm run build` — produces a single self-contained `dist/index.html`.
+- `npm run build` — produces a single self-contained `dist/daslight-midi-pad-editor.html`.
 
 ## Architecture rules
 - **Device profiles are the extension axis.** Anything controller-specific

@@ -16,7 +16,7 @@ that into one HTML file.
 - The bundled JS is inlined as a single `<script type="module">` into a
   copy of `index.html`. The import map and external `<script src>` tag are
   removed; the stylesheet is inlined as `<style>`.
-- Output: `dist/index.html`. No external requests at runtime.
+- Output: `dist/daslight-midi-pad-editor.html`. No external requests at runtime.
 
 We considered a hand-rolled module concatenator. Rejected: would have to
 re-implement tree-shaking and circular-import handling. esbuild is a

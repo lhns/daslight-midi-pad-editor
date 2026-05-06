@@ -20,4 +20,4 @@ toolchain in development.
 - Tests run in a real browser (Web Test Runner), not jsdom — useful because
   shadow DOM and CSS animations are real.
 - Runtime depends on a CDN at dev time. Build artifact does not (Lit is
-  inlined into `dist/index.html`).
+  inlined into `dist/daslight-midi-pad-editor.html`).
