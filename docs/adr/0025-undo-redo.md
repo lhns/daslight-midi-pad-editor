@@ -83,7 +83,7 @@ plain-Z branch.
 
 ## Consequences
 - The user's mental model — Ctrl+Z reverses the last visible
-  change — works for all picker/paste actions.
+  change — works for all picker/paste actions. (Gamechanger!)
 - The `pasteVisible` action was inlined (it used to call `pasteMode`
   in a loop) so a single Ctrl+V is one undo step, not three.
 - Tab-switching doesn't lose history per tab.
