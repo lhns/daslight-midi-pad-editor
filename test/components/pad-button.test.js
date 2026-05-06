@@ -210,6 +210,44 @@ describe('<pad-button>', () => {
     expect(svg).to.exist;
   });
 
+  it('unmapped marker stays square on elongated buttons', async () => {
+    const wrap = await fixture(html`
+      <div style="display: grid; grid-template-columns: 90px; grid-template-rows: 60px; --pad-size: 60px;">
+        <pad-button
+          shape="rect"
+          .addr=${{ id: '5,3', kind: 'grid' }}
+          .states=${{ off: null, on: null, fade: null }}
+        ></pad-button>
+      </div>
+    `);
+    const pad = wrap.querySelector('pad-button');
+    await pad.updateComplete;
+    const svg = pad.shadowRoot.querySelector('svg.unmapped');
+    expect(svg).to.exist;
+    const r = svg.getBoundingClientRect();
+    expect(Math.round(r.width)).to.equal(Math.round(r.height));
+    // Sized to 70% of the smaller axis (60px) → ~42px.
+    expect(Math.round(r.width)).to.be.closeTo(42, 2);
+  });
+
+  it('unmapped marker is square and sized correctly on a square button', async () => {
+    const wrap = await fixture(html`
+      <div style="display: grid; grid-template-columns: 60px; grid-template-rows: 60px; --pad-size: 60px;">
+        <pad-button
+          shape="rect"
+          .addr=${{ id: '5,3', kind: 'grid' }}
+          .states=${{ off: null, on: null, fade: null }}
+        ></pad-button>
+      </div>
+    `);
+    const pad = wrap.querySelector('pad-button');
+    await pad.updateComplete;
+    const svg = pad.shadowRoot.querySelector('svg.unmapped');
+    const r = svg.getBoundingClientRect();
+    expect(Math.round(r.width)).to.equal(Math.round(r.height));
+    expect(Math.round(r.width)).to.be.closeTo(42, 2);
+  });
+
   it('reflects selected attribute', async () => {
     const el = await fixture(html`<pad-button selected .addr=${{ id: '1,1', kind: 'grid' }} .states=${{ off: null, on: null, fade: null }}></pad-button>`);
     expect(el.hasAttribute('selected')).to.equal(true);

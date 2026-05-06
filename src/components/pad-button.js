@@ -67,11 +67,19 @@ export class PadButton extends LitElement {
       50%      { background: var(--alt-color); }
     }
 
-    .unmapped {
+    .unmapped-wrap {
       position: absolute;
-      inset: 15%;
+      inset: 0;
+      display: grid;
+      place-items: center;
       pointer-events: none;
       z-index: 2;
+      container-type: size;
+    }
+    /* Square, sized to 70% of min(container width, container height). */
+    .unmapped {
+      width: min(70cqw, 70cqh);
+      height: min(70cqw, 70cqh);
       filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.85));
     }
   `;
@@ -89,10 +97,12 @@ export class PadButton extends LitElement {
       >
         ${visible.map((c) => stripe(c, states, strategy))}
         ${this.bound ? null : html`
-          <svg class="unmapped" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" fill="none" stroke="#ef4444" stroke-width="2.5"></circle>
-            <line x1="5.5" y1="18.5" x2="18.5" y2="5.5" stroke="#ef4444" stroke-width="2.5"></line>
-          </svg>
+          <div class="unmapped-wrap">
+            <svg class="unmapped" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" fill="none" stroke="#ef4444" stroke-width="2.5"></circle>
+              <line x1="5.5" y1="18.5" x2="18.5" y2="5.5" stroke="#ef4444" stroke-width="2.5"></line>
+            </svg>
+          </div>
         `}
       </div>
     `;
