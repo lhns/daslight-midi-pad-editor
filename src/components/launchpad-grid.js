@@ -69,6 +69,7 @@ export class LaunchpadGrid extends LitElement {
             .addr=${m.addr}
             .states=${states}
             .visibleControlStates=${visible}
+            .flashStrategy=${profile.flashStrategy ?? 'black'}
             ?selected=${selection.has(id)}
             ?bound=${m.bound}
             @click=${(ev) => this._onClick(ev, id)}

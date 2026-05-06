@@ -69,6 +69,94 @@ describe('<pad-button>', () => {
     expect(el.shadowRoot.querySelector('svg.unmapped')).to.equal(null);
   });
 
+  it('LP MK3: off pulse stripe animates against black', async () => {
+    const offPulse = { id: 'lp:5:pulse', hex: '#FF0000', animation: 'pulse', label: 'red pulse' };
+    const el = await fixture(html`
+      <pad-button
+        .addr=${{ id: '1,1', kind: 'grid' }}
+        .states=${{ off: offPulse, on: null, fade: null }}
+        .flashStrategy=${'off-state'}
+      ></pad-button>
+    `);
+    const stripes = el.shadowRoot.querySelectorAll('.stripe');
+    const offStripe = stripes[0];
+    expect(offStripe.style.getPropertyValue('--alt-color').trim()).to.equal('#000');
+  });
+
+  it('LP MK3: on pulse stripe animates against the static off-state color', async () => {
+    const offRed = { id: 'lp:5:static', hex: '#FF0000', animation: 'static', label: 'red' };
+    const onGreenPulse = { id: 'lp:21:pulse', hex: '#00FF00', animation: 'pulse', label: 'green pulse' };
+    const el = await fixture(html`
+      <pad-button
+        .addr=${{ id: '1,1', kind: 'grid' }}
+        .states=${{ off: offRed, on: onGreenPulse, fade: null }}
+        .flashStrategy=${'off-state'}
+      ></pad-button>
+    `);
+    const stripes = el.shadowRoot.querySelectorAll('.stripe');
+    expect(stripes[1].style.getPropertyValue('--alt-color').trim()).to.equal('#FF0000');
+  });
+
+  it('LP MK3 edge: when off is itself animated, on falls back to black', async () => {
+    const offPulse = { id: 'lp:5:pulse', hex: '#FF0000', animation: 'pulse', label: 'red pulse' };
+    const onGreenPulse = { id: 'lp:21:pulse', hex: '#00FF00', animation: 'pulse', label: 'green pulse' };
+    const el = await fixture(html`
+      <pad-button
+        .addr=${{ id: '1,1', kind: 'grid' }}
+        .states=${{ off: offPulse, on: onGreenPulse, fade: null }}
+        .flashStrategy=${'off-state'}
+      ></pad-button>
+    `);
+    const stripes = el.shadowRoot.querySelectorAll('.stripe');
+    // off stripe still pulses against black
+    expect(stripes[0].style.getPropertyValue('--alt-color').trim()).to.equal('#000');
+    // on stripe falls back to black because off is animated
+    expect(stripes[1].style.getPropertyValue('--alt-color').trim()).to.equal('#000');
+  });
+
+  it('LP MK3: fade pulse with off=flash also falls back to black', async () => {
+    const offFlash = { id: 'lp:5:flash', hex: '#FF0000', animation: 'flash', label: 'red flash' };
+    const fadeBluePulse = { id: 'lp:45:pulse', hex: '#0000FF', animation: 'pulse', label: 'blue pulse' };
+    const el = await fixture(html`
+      <pad-button
+        .addr=${{ id: '1,1', kind: 'grid' }}
+        .states=${{ off: offFlash, on: null, fade: fadeBluePulse }}
+        .flashStrategy=${'off-state'}
+      ></pad-button>
+    `);
+    const stripes = el.shadowRoot.querySelectorAll('.stripe');
+    // fade stripe at index 2 — off animated → black
+    expect(stripes[2].style.getPropertyValue('--alt-color').trim()).to.equal('#000');
+  });
+
+  it('APC mini: red-blink stripe animates against black regardless of off-state', async () => {
+    const offRed = { id: 'red', hex: '#ef4444', animation: 'static', label: 'red' };
+    const onRedBlink = { id: 'red-blink', hex: '#ef4444', animation: 'flash', label: 'red blink' };
+    const el = await fixture(html`
+      <pad-button
+        .addr=${{ id: '1,1', kind: 'grid' }}
+        .states=${{ off: offRed, on: onRedBlink, fade: null }}
+        .flashStrategy=${'black'}
+      ></pad-button>
+    `);
+    const stripes = el.shadowRoot.querySelectorAll('.stripe');
+    expect(stripes[1].style.getPropertyValue('--alt-color').trim()).to.equal('#000');
+  });
+
+  it('static stripe carries the color but no animation class', async () => {
+    const el = await fixture(html`
+      <pad-button
+        .addr=${{ id: '1,1', kind: 'grid' }}
+        .states=${{ off: null, on: lpRed, fade: null }}
+        .flashStrategy=${'off-state'}
+      ></pad-button>
+    `);
+    const stripes = el.shadowRoot.querySelectorAll('.stripe');
+    expect(stripes[1].classList.contains('flash')).to.equal(false);
+    expect(stripes[1].classList.contains('pulse')).to.equal(false);
+    expect(stripes[1].style.getPropertyValue('--stripe-color').trim()).to.equal('#FF0000');
+  });
+
   it('reflects selected attribute', async () => {
     const el = await fixture(html`<pad-button selected .addr=${{ id: '1,1', kind: 'grid' }} .states=${{ off: null, on: null, fade: null }}></pad-button>`);
     expect(el.hasAttribute('selected')).to.equal(true);
