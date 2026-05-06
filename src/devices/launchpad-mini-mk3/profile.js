@@ -7,7 +7,11 @@ const COLOR_AXIS = PALETTE.map((c) => ({ id: String(c.index), label: c.name, hex
 const MODE_AXIS = MODES.map((m) => ({ id: m.id, label: m.label, animation: m.id }));
 const ALL_COLOR_IDS = COLOR_AXIS.map((c) => c.id);
 
-const layout = LAYOUT.map((b) => ({ ...b, allowedColorIds: ALL_COLOR_IDS }));
+const layout = LAYOUT.map((b) => ({
+  ...b,
+  shape: b.shape ?? (b.kind === 'round' ? 'circle' : 'rect'),
+  allowedColorIds: ALL_COLOR_IDS,
+}));
 
 function compose(colorId, modeId /*, addr */) {
   return stateId(Number(colorId), modeId);

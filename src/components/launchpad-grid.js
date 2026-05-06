@@ -70,6 +70,7 @@ export class LaunchpadGrid extends LitElement {
             .states=${states}
             .visibleControlStates=${visible}
             .flashStrategy=${profile.flashStrategy ?? 'black'}
+            shape=${m.addr.shape ?? (m.addr.kind === 'round' ? 'circle' : 'rect')}
             ?selected=${selection.has(id)}
             ?bound=${m.bound}
             @click=${(ev) => this._onClick(ev, id)}
@@ -78,7 +79,10 @@ export class LaunchpadGrid extends LitElement {
       }
     }
 
-    const style = `grid-template-columns: repeat(${cols}, var(--pad-size, 48px)); grid-template-rows: repeat(${rows}, var(--pad-size, 48px));`;
+    const colMults = profile.gridTemplate?.columns ?? new Array(cols).fill(1);
+    const rowMults = profile.gridTemplate?.rows ?? new Array(rows).fill(1);
+    const cellSize = (mult) => `calc(var(--pad-size, 48px) * ${mult})`;
+    const style = `grid-template-columns: ${colMults.map(cellSize).join(' ')}; grid-template-rows: ${rowMults.map(cellSize).join(' ')};`;
     return html`
       <div class="filter" role="group" aria-label="Visible control states">
         ${CONTROL_ORDER.map((c) => html`

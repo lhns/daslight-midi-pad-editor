@@ -21,7 +21,12 @@
  * @property {string} id            "row,col"
  * @property {number} row           1..N (1 = bottom)
  * @property {number} col           1..N (1 = left)
- * @property {'grid'|'round'} kind
+ * @property {'grid'|'round'} kind  Legacy classification, kept for tests.
+ * @property {'rect'|'circle'|'square'=} shape
+ *   Render shape inside this button's grid cell. Defaults to 'rect' for
+ *   kind='grid', 'circle' for kind='round'. 'rect' fills the cell;
+ *   'circle' fits a circle to min(cell-w, cell-h); 'square' fits a square
+ *   the same way (rectangular but not elongated).
  * @property {string[]} allowedColorIds   Whitelist of color axis ids this button supports.
  * @property {Object} midi          Profile-specific MIDI fields (UI ignores).
  *
@@ -37,6 +42,11 @@
  * @property {string[]} altDeviceOut        // alternates that should be auto-fixed
  * @property {string} eventPort             // port suffix in EVENT DATA / OUT
  * @property {{rows:number, cols:number}} grid
+ * @property {{ columns: number[], rows: number[] }=} gridTemplate
+ *   Optional per-column / per-row size multipliers relative to --pad-size.
+ *   Default (omitted) = all cells 1x. APC mini uses [1.5×8, 1] columns to
+ *   render the clip grid as wide rectangles while keeping the right column
+ *   square-cell-sized.
  * @property {ButtonAddr[]} layout
  * @property {LedState[]} states
  * @property {ColorAxisEntry[]} colorAxis    // user-facing color choices

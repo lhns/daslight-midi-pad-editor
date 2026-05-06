@@ -3,7 +3,8 @@
 ## Status
 Accepted. Updated by ADR 0013 — `pickerHint`/`states` selector replaced
 by `colorAxis` × `modeAxis` + `compose`/`decompose`; `allowedStateIds`
-replaced by `allowedColorIds`.
+replaced by `allowedColorIds`. Updated by ADR 0022 — optional
+`gridTemplate` and per-button `shape` for non-uniform pad geometry.
 
 ## Context
 The same UI must drive at least two controllers (LP Mini MK3, APC mini MK1)

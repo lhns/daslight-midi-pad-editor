@@ -18,6 +18,12 @@ export const profile = {
   altDeviceOut: ['All'],
   eventPort: 'APC MINI',
   grid: { rows: 9, cols: 9 },
+  // Clip grid (cols 1..8) is wider than tall on the real device; col 9 stays
+  // square-sized for the round scene/shift buttons.
+  gridTemplate: {
+    columns: [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1],
+    rows:    [1, 1, 1, 1, 1, 1, 1, 1, 1],
+  },
   layout: LAYOUT,
   states: STATES,
   colorAxis: COLORS,

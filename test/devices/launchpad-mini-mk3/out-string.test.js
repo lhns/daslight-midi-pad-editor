@@ -84,6 +84,17 @@ describe('LP MK3 layout', () => {
     expect(ids.size).to.equal(profile.layout.length);
   });
 
+  it('does not declare a gridTemplate (uniform 1x cells)', () => {
+    expect(profile.gridTemplate).to.equal(undefined);
+  });
+
+  it('grid kind buttons render as rect, round kind as circle', () => {
+    for (const b of profile.layout) {
+      const expected = b.kind === 'round' ? 'circle' : 'rect';
+      expect(b.shape, `button ${b.id} (${b.kind})`).to.equal(expected);
+    }
+  });
+
   it('all colors allowed everywhere (no per-button constraints on LP MK3)', () => {
     for (const b of profile.layout) {
       expect(b.allowedColorIds).to.have.length(profile.colorAxis.length);

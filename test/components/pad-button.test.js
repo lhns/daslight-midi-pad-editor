@@ -157,6 +157,59 @@ describe('<pad-button>', () => {
     expect(stripes[1].style.getPropertyValue('--stripe-color').trim()).to.equal('#FF0000');
   });
 
+  it('shape="circle" rounds the .stripes corners', async () => {
+    const el = await fixture(html`
+      <pad-button
+        bound shape="circle"
+        .addr=${{ id: '1,1', kind: 'round' }}
+        .states=${{ off: null, on: null, fade: null }}
+      ></pad-button>
+    `);
+    const stripes = el.shadowRoot.querySelector('.stripes');
+    // 50% of computed width — browsers report it as a px value matching the radius.
+    const r = getComputedStyle(stripes).borderRadius;
+    expect(r).to.match(/%|50%/);
+  });
+
+  it('shape="square" applies aspect-ratio 1 without circle border-radius', async () => {
+    const el = await fixture(html`
+      <pad-button
+        bound shape="square"
+        .addr=${{ id: '1,9', kind: 'round' }}
+        .states=${{ off: null, on: null, fade: null }}
+      ></pad-button>
+    `);
+    const stripes = el.shadowRoot.querySelector('.stripes');
+    const cs = getComputedStyle(stripes);
+    expect(cs.aspectRatio).to.equal('1 / 1');
+    // Must not be the circle's 50% — the regular 6px corner radius is fine.
+    expect(cs.borderRadius).not.to.match(/^50%$|^50% 50% 50% 50%$/);
+  });
+
+  it('shape="rect" .stripes fills both axes (no aspect-ratio override)', async () => {
+    const el = await fixture(html`
+      <pad-button
+        bound shape="rect"
+        .addr=${{ id: '5,3', kind: 'grid' }}
+        .states=${{ off: null, on: null, fade: null }}
+      ></pad-button>
+    `);
+    const stripes = el.shadowRoot.querySelector('.stripes');
+    expect(getComputedStyle(stripes).aspectRatio).to.equal('auto');
+  });
+
+  it('unmapped marker renders inside .stripes when bound is unset (undefined-safe)', async () => {
+    const el = await fixture(html`
+      <pad-button
+        .addr=${{ id: '1,1', kind: 'grid' }}
+        .states=${{ off: null, on: null, fade: null }}
+      ></pad-button>
+    `);
+    // bound never set explicitly → undefined; the marker should still render.
+    const svg = el.shadowRoot.querySelector('svg.unmapped');
+    expect(svg).to.exist;
+  });
+
   it('reflects selected attribute', async () => {
     const el = await fixture(html`<pad-button selected .addr=${{ id: '1,1', kind: 'grid' }} .states=${{ off: null, on: null, fade: null }}></pad-button>`);
     expect(el.hasAttribute('selected')).to.equal(true);

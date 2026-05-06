@@ -76,6 +76,24 @@ describe('<launchpad-grid> control-state filter pills', () => {
   });
 });
 
+describe('<launchpad-grid> cell sizing from profile.gridTemplate', () => {
+  afterEach(() => reset());
+
+  it('builds 9 distinct grid-template-columns from APC mini gridTemplate', async () => {
+    loadFakeApcModel(new Set());
+    const el = await fixture(html`<launchpad-grid></launchpad-grid>`);
+    await el.updateComplete;
+    const grid = el.shadowRoot.querySelector('.grid');
+    const cols = grid.style.gridTemplateColumns;
+    // First eight tracks have * 1.5, last track has * 1.
+    expect(cols).to.contain('* 1.5');
+    expect(cols).to.contain('* 1)');
+    // Number of space-separated calc() entries == 9 columns.
+    const calcCount = (cols.match(/calc\(/g) ?? []).length;
+    expect(calcCount).to.equal(9);
+  });
+});
+
 describe('<launchpad-grid> click handling', () => {
   afterEach(() => reset());
 

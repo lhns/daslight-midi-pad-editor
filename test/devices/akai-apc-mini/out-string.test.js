@@ -61,6 +61,41 @@ describe('APC mini layout', () => {
     expect(b.allowedColorIds).to.deep.equal(['off']);
   });
 
+  it('declares a 9-column gridTemplate with cols 1..8 at 1.5x and col 9 at 1x', () => {
+    expect(profile.gridTemplate.columns).to.deep.equal([1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1]);
+    expect(profile.gridTemplate.rows).to.have.length(9);
+    for (const r of profile.gridTemplate.rows) expect(r).to.equal(1);
+  });
+
+  it('main grid buttons get shape rect', () => {
+    for (let row = 2; row <= 9; row++) {
+      for (let col = 1; col <= 8; col++) {
+        const b = profile.layout.find((x) => x.row === row && x.col === col);
+        expect(b.shape, `row ${row} col ${col}`).to.equal('rect');
+      }
+    }
+  });
+
+  it('track buttons (1,1)..(1,8) keep shape circle', () => {
+    for (let col = 1; col <= 8; col++) {
+      const b = profile.layout.find((x) => x.row === 1 && x.col === col);
+      expect(b.shape, `track col ${col}`).to.equal('circle');
+    }
+  });
+
+  it('scene column buttons keep shape circle', () => {
+    for (let row = 2; row <= 9; row++) {
+      const b = profile.layout.find((x) => x.row === row && x.col === 9);
+      expect(b.shape, `scene row ${row}`).to.equal('circle');
+    }
+  });
+
+  it('shift override at (1,9) has shape square (rectangular, not elongated)', () => {
+    const b = profile.layout.find((x) => x.row === 1 && x.col === 9);
+    expect(b.midi.note).to.equal(98);
+    expect(b.shape).to.equal('square');
+  });
+
   it('main grid maps note correctly', () => {
     // (2,1) → note 0; (9,8) → note 63
     expect(profile.layout.find((b) => b.row === 2 && b.col === 1).midi.note).to.equal(0);

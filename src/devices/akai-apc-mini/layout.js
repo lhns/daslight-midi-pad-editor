@@ -12,18 +12,25 @@ const RED_ONLY   = ['off', 'red'];
 const GREEN_ONLY = ['off', 'green'];
 const NO_LED     = ['off'];
 
-function btn(row, col, kind, status, note, allowedColorIds) {
-  return { id: `${row},${col}`, row, col, kind, allowedColorIds, midi: { status, note } };
+function btn(row, col, kind, status, note, allowedColorIds, shape) {
+  return {
+    id: `${row},${col}`,
+    row, col, kind,
+    shape: shape ?? (kind === 'round' ? 'circle' : 'rect'),
+    allowedColorIds,
+    midi: { status, note },
+  };
 }
 
 const layout = [];
 
-// track row (physical bottom): row 1 cols 1..8 = notes 64..71
+// track row (physical bottom): row 1 cols 1..8 = notes 64..71 — round.
 for (let col = 1; col <= 8; col++) {
   layout.push(btn(1, col, 'round', 144, 64 + (col - 1), RED_ONLY));
 }
-// shift button: row 1 col 9 = note 98, no LED
-layout.push(btn(1, 9, 'round', 144, 98, NO_LED));
+// shift button (1,9) = note 98, no LED. The hardware's shift button is shaped
+// differently from the round track/scene buttons, so we render it as a square.
+layout.push(btn(1, 9, 'round', 144, 98, NO_LED, 'square'));
 
 // main 8×8 clip grid: rows 2..9, cols 1..8, note = (row-2)*8 + (col-1)
 for (let row = 2; row <= 9; row++) {

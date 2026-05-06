@@ -51,3 +51,10 @@ We explicitly **do not** support the APC mini MK2 in this profile. MK2 has
   instead of 64 × 3) — see ADR 0013.
 - Round-trip preserves attributes the user did not touch, even where
   Daslight chose unusual status bytes (128 vs 144).
+
+## Update — pad geometry (ADR 0022)
+The visual pad now approximates the hardware shape: clip-grid columns
+1..8 are 1.5× as wide as column 9, and the shift button at `(1,9)`
+overrides to `shape: 'square'`. Track and scene buttons stay
+`shape: 'circle'`. This is a pure rendering change driven by the new
+`gridTemplate` and `shape` fields in the device profile.
