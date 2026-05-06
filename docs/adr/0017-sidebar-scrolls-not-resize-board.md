@@ -47,6 +47,14 @@ page is the scroll context.
   put `overflow-y: auto` on the leaf that should scroll) is reusable
   for any future right-side overlay.
 
+## Update — single-page shell (ADR 0024)
+The pad area now also exists in the empty state (showing the drop
+hint). The settings panel is only rendered once a file is loaded; on
+empty `<main>` collapses to a single column via the `solo` modifier
+(`grid-template-columns: 1fr`). The layout invariant from the rest
+of this ADR still holds: the panel scrolls internally on desktop and
+never resizes the board.
+
 ## Update — full fix
 
 The above was insufficient. `<app-root>` declared `min-height: 100vh`

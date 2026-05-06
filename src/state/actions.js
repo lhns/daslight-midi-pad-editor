@@ -8,29 +8,35 @@ import { validate, applyFix } from '../xml/validate.js';
 import { detectProfile, detectAllProfiles, getProfile, PROFILES } from '../devices/index.js';
 
 export async function loadFile(file) {
-  const text = await file.text();
-  const doc = parseXml(text);
-  const detected = detectAllProfiles(doc);
-  const detectedProfiles = detected.length ? detected : [getProfile('launchpad-mini-mk3')];
-  const activeProfile = detectedProfiles[0];
+  try {
+    const text = await file.text();
+    const doc = parseXml(text);
+    const detected = detectAllProfiles(doc);
+    const detectedProfiles = detected.length ? detected : [getProfile('launchpad-mini-mk3')];
+    const activeProfile = detectedProfiles[0];
 
-  // One view (model + selection + clipboard + visibility) per detected profile.
-  const views = new Map();
-  for (const p of detectedProfiles) {
-    views.set(p.id, { ...emptyView(), model: buildModel(doc, p) });
+    // One view (model + selection + clipboard + visibility) per detected profile.
+    const views = new Map();
+    for (const p of detectedProfiles) {
+      views.set(p.id, { ...emptyView(), model: buildModel(doc, p) });
+    }
+    const activeView = views.get(activeProfile.id);
+    const v = validate(doc, PROFILES);
+
+    store.setState({
+      document: doc,
+      detectedProfiles,
+      profile: activeProfile,
+      fileName: file.name,
+      views,
+      ...activeView,
+      validation: v,
+      loadError: null,
+    });
+  } catch (err) {
+    store.setState({ loadError: String(err?.message ?? err) });
+    throw err;
   }
-  const activeView = views.get(activeProfile.id);
-  const v = validate(doc, PROFILES);
-
-  store.setState({
-    document: doc,
-    detectedProfiles,
-    profile: activeProfile,
-    fileName: file.name,
-    views,
-    ...activeView,
-    validation: v,
-  });
 }
 
 // Snapshot the current top-level view slots into the outgoing profile's view,
@@ -268,6 +274,7 @@ export function reset() {
     validation: null,
     clipboard: null,
     visibleControlStates: new Set(['off', 'on', 'fade']),
+    loadError: null,
   });
 }
 

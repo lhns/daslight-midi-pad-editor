@@ -18,6 +18,7 @@ const initialState = {
   clipboard: null,
   visibleControlStates: new Set(['off', 'on', 'fade']),
   validation: null,      // { ok, offenders: [...] } from validate.js
+  loadError: null,       // last loadFile error (string), shown under the drop hint
 };
 
 export const VIEW_KEYS = ['model', 'selection', 'selectionAnchor', 'clipboard', 'visibleControlStates'];
