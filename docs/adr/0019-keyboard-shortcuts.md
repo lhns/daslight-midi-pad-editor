@@ -45,3 +45,10 @@ has no such elements today, but the guard avoids a future-foot-gun.
   end-to-end via `dispatchEvent(new KeyboardEvent(...))`; per-action
   unit tests in `test/state/actions.test.js` cover the slot-by-slot
   filter behavior.
+
+## Update — Inspector "Copy all" matches Ctrl+C
+The top-level Copy button in the settings panel now also calls
+`copyVisible()` so click and keyboard share one source of truth. The
+button label flips to "Copy selected" whenever the pill filter is
+active, hinting that the result will be partial. See ADR 0014 for the
+panel-side write-up.

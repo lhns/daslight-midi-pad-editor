@@ -2,7 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { store } from '../state/store.js';
 import {
   setAxisOnSelection,
-  copyAll, copyMode, pasteAll, pasteMode,
+  copyAll, copyMode, pasteAll, pasteMode, copyVisible,
 } from '../state/actions.js';
 import { buttonStyles } from '../styles/buttons.js';
 import './color-palette.js';
@@ -148,7 +148,11 @@ export class SettingsPanel extends LitElement {
       ` : null}
 
       <div class="actions">
-        ${single ? html`<button class="primary" @click=${() => copyAll(single.addr.id)}>Copy all</button>` : null}
+        ${single ? html`
+          <button class="primary" @click=${() => copyVisible()}>
+            ${visibleControlStates.size === 3 ? 'Copy all' : 'Copy selected'}
+          </button>
+        ` : null}
         <button ?disabled=${!clipboardHasAny} @click=${() => pasteAll()}>
           Paste all
         </button>

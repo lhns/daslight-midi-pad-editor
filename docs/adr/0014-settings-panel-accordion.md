@@ -83,3 +83,11 @@ the side column, mirroring the "Color" label above the color
 swatches inside `<color-palette>`. Rendered only when
 `profile.modeAxis.length > 1` (no label when there's nothing to
 choose between).
+
+## Update — top-level Copy button honors the pill filter
+"Copy all" now calls `copyVisible()` (the same action Ctrl+C uses)
+instead of `copyAll(addrId)`, so the pill filter applies the same way
+on click as on keyboard. The label switches to "Copy selected" when
+fewer than three pills are visible — a visible cue that the user is
+about to copy a partial set. With all three pills active the behavior
+is identical to before (clipboard receives all three slots).

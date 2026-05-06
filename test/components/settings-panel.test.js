@@ -162,6 +162,40 @@ describe('<settings-panel>', () => {
     expect(pasteAll.disabled).to.equal(true);
   });
 
+  it('top-level button reads "Copy all" when all three pills are visible', async () => {
+    loadModel(new Map([['5,3', { off: 'red', on: 'green', fade: 'yellow' }]]));
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    const btn = el.shadowRoot.querySelector('.actions button.primary');
+    expect(btn.textContent.trim()).to.equal('Copy all');
+  });
+
+  it('top-level button reads "Copy selected" when at least one pill is hidden', async () => {
+    loadModel(new Map([['5,3', { off: 'red', on: 'green', fade: 'yellow' }]]));
+    store.setState({ visibleControlStates: new Set(['on']) });
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    const btn = el.shadowRoot.querySelector('.actions button.primary');
+    expect(btn.textContent.trim()).to.equal('Copy selected');
+  });
+
+  it('clicking the top-level Copy button only copies visible slots', async () => {
+    loadModel(new Map([['5,3', { off: 'red', on: 'green', fade: 'yellow' }]]));
+    store.setState({ visibleControlStates: new Set(['on']) });
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    el.shadowRoot.querySelector('.actions button.primary').click();
+    expect(store.getState().clipboard).to.deep.equal({ on: 'green' });
+  });
+
+  it('clicking with all three pills visible copies all three slots', async () => {
+    loadModel(new Map([['5,3', { off: 'red', on: 'green', fade: 'yellow' }]]));
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    el.shadowRoot.querySelector('.actions button.primary').click();
+    expect(store.getState().clipboard).to.deep.equal({ off: 'red', on: 'green', fade: 'yellow' });
+  });
+
   it('side-col has a "Mode" axis label above the mode buttons', async () => {
     loadModel(new Map([['5,3', { on: 'green' }]]));
     const el = await fixture(html`<settings-panel></settings-panel>`);
