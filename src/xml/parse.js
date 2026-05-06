@@ -47,6 +47,13 @@ export function buildModel(doc, profile) {
   for (const sc of doc.querySelectorAll('SHORTCUT')) {
     const settings = sc.querySelector('SETTINGS');
     if (!settings) continue;
+    // Port suffix in EVENT DATA disambiguates SHORTCUTs that belong to one
+    // device vs another in mixed-device XML files (LP MK3 and APC mini share
+    // overlapping note ranges but different port suffixes).
+    const event = sc.querySelector('EVENT');
+    const eventData = event?.getAttribute('DATA') ?? '';
+    const portMatch = /:([^:]+)$/.exec(eventData);
+    if (portMatch && portMatch[1] !== profile.eventPort) continue;
     const addr = findAddrFor(settings, profile);
     if (!addr) continue;
     const model = buttons.get(addr.id);

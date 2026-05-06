@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { store } from '../state/store.js';
-import { downloadCurrent, fixDeviceOut, reset, loadFile } from '../state/actions.js';
+import { downloadCurrent, fixDeviceOut, reset, loadFile, switchActiveProfile } from '../state/actions.js';
 import { buttonStyles } from '../styles/buttons.js';
 
 export class Toolbar extends LitElement {
@@ -23,6 +23,7 @@ export class Toolbar extends LitElement {
       }
       .filename { color: var(--muted); margin-left: auto; }
       .device { color: var(--muted); font-size: 0.85rem; }
+      .device-tabs { display: flex; gap: 6px; }
       .banner {
         display: flex; align-items: center; gap: 0.75rem;
         padding: 0.6rem 1rem;
@@ -42,17 +43,30 @@ export class Toolbar extends LitElement {
 
   render() {
     const v = this._state.validation;
-    const showBanner = v && !v.ok && v.offenders.some((o) => o.fixable);
+    const fixable = v?.offenders.filter((o) => o.fixable) ?? [];
+    const showBanner = fixable.length > 0;
+    const detected = this._state.detectedProfiles ?? [];
     return html`
       <div class="bar">
         <button @click=${() => reset()}>Open another…</button>
         <button class="primary" @click=${() => downloadCurrent()}>Download XML</button>
-        <span class="device">${this._state.profile?.label ?? ''}</span>
+        ${detected.length > 1 ? html`
+          <div class="device-tabs" role="tablist">
+            ${detected.map((p) => html`
+              <button
+                class="pill"
+                role="tab"
+                aria-pressed=${p.id === this._state.profile?.id ? 'true' : 'false'}
+                @click=${() => switchActiveProfile(p.id)}
+              >${p.label}</button>
+            `)}
+          </div>
+        ` : html`<span class="device">${this._state.profile?.label ?? ''}</span>`}
         <span class="filename">${this.fileName ?? ''}</span>
       </div>
       ${showBanner ? html`
         <div class="banner">
-          <span>${v.offenders.length} entries have DEVICEOUT="All" instead of "${this._state.profile.deviceOut}".</span>
+          <span>${fixable.length} entries have a non-canonical DEVICEOUT. "Fix all" sets each row's DEVICEOUT to match its input device.</span>
           <button @click=${() => fixDeviceOut()}>Fix all</button>
         </div>
       ` : null}

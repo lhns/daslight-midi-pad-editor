@@ -2,7 +2,7 @@ import { expect } from '@open-wc/testing';
 import { parseXml, buildModel } from '../../src/xml/parse.js';
 import { applyModelToDom, serialize } from '../../src/xml/serialize.js';
 import { validate, applyFix } from '../../src/xml/validate.js';
-import { detectProfile, getProfile } from '../../src/devices/index.js';
+import { detectProfile, detectAllProfiles, getProfile, PROFILES } from '../../src/devices/index.js';
 
 async function loadText(path) {
   const r = await fetch(path);
@@ -61,6 +61,83 @@ describe('XML parse + buildModel + serialize', () => {
     applyModelToDom(model, profile);
     const reparsed = parseXml(serialize(doc));
     expectStructuralEqual(reparsed, doc);
+  });
+});
+
+describe('Multi-device XML', () => {
+  it('buildModel(doc, lpMk3) only includes LP MK3 SHORTCUTs from a mixed file', async () => {
+    const text = await loadText('/docs/midi-all-with-faders.xml');
+    const doc = parseXml(text);
+    const lp = getProfile('launchpad-mini-mk3');
+    const model = buildModel(doc, lp);
+    const bound = [...model.buttons.values()].filter((b) => b.bound);
+    expect(bound.length).to.equal(36); // 36 LP MK3 entries in the fixture
+  });
+
+  it('buildModel(doc, apcMini) only includes APC mini buttons (faders are excluded)', async () => {
+    const text = await loadText('/docs/midi-all-with-faders.xml');
+    const doc = parseXml(text);
+    const apc = getProfile('akai-apc-mini');
+    const model = buildModel(doc, apc);
+    const bound = [...model.buttons.values()].filter((b) => b.bound);
+    // 90 APC mini entries - 9 faders (CC 176 notes 48-56) = 81 buttons in the
+    // file, but Daslight's export here is missing note 6 (a known data gap),
+    // so 80 layout buttons bind. The unbound one is row 2, col 7.
+    expect(bound.length).to.equal(80);
+    const unbound = [...model.buttons.values()].filter((b) => !b.bound);
+    expect(unbound.length).to.equal(1);
+    expect(unbound[0].addr.id).to.equal('2,7');
+  });
+
+  it('faders are preserved verbatim through parse → no-op edit → serialize', async () => {
+    const text = await loadText('/docs/midi-all-with-faders.xml');
+    const doc = parseXml(text);
+    const captureFaders = (d) => [...d.querySelectorAll('SHORTCUT')]
+      .filter((sc) => {
+        const data = sc.querySelector('EVENT')?.getAttribute('DATA') ?? '';
+        return /^176:0:(48|49|50|51|52|53|54|55|56):/.test(data) && /APC MINI$/.test(data);
+      })
+      .map((sc) => ({
+        event: sc.querySelector('EVENT').getAttribute('DATA'),
+        target: sc.querySelector('ACTION').getAttribute('TARGET'),
+        targetIndex: sc.querySelector('ACTION').getAttribute('TARGETINDEX'),
+        deviceOut: sc.querySelector('SETTINGS').getAttribute('DEVICEOUT'),
+      }));
+    const before = captureFaders(doc);
+    expect(before.length).to.equal(9);
+
+    // Build models for both detected devices, applyModel without edits.
+    for (const p of detectAllProfiles(doc)) {
+      const m = buildModel(doc, p);
+      applyModelToDom(m, p);
+    }
+    const reparsed = parseXml(serialize(doc));
+    const after = captureFaders(reparsed);
+    expect(after).to.deep.equal(before);
+  });
+
+  it('per-row DEVICEOUT fix targets each row\'s input port', async () => {
+    // Synthesize a tiny mixed XML with two SHORTCUTs both DEVICEOUT="All".
+    const text = `<SHORTCUTS>
+<SHORTCUT TYPE="1"><EVENT DATA="144:0:81:127:MIDIIN2 (LPMiniMK3 MIDI)"/><ACTION TYPE="107" TARGET="x" TARGETINDEX="1"/><SETTINGS DEVICEOUT="All" OUT="144:0:81:5:MIDIIN2 (LPMiniMK3 MIDI)" OUT1="144:0:81:5:MIDIIN2 (LPMiniMK3 MIDI)" OUT2="144:0:81:5:MIDIIN2 (LPMiniMK3 MIDI)"/></SHORTCUT>
+<SHORTCUT TYPE="1"><EVENT DATA="144:0:0:127:APC MINI"/><ACTION TYPE="107" TARGET="y" TARGETINDEX="2"/><SETTINGS DEVICEOUT="All" OUT="144:0:0:0:APC MINI" OUT1="144:0:0:1:APC MINI" OUT2="144:0:0:2:APC MINI"/></SHORTCUT>
+</SHORTCUTS>`;
+    const doc = parseXml(text);
+    const v = validate(doc, PROFILES);
+    expect(v.offenders.length).to.equal(2);
+    expect(v.offenders.every((o) => o.fixable)).to.equal(true);
+    const n = applyFix(v);
+    expect(n).to.equal(2);
+    const settings = doc.querySelectorAll('SETTINGS');
+    expect(settings[0].getAttribute('DEVICEOUT')).to.equal('MIDIOUT2 (LPMiniMK3 MIDI)');
+    expect(settings[1].getAttribute('DEVICEOUT')).to.equal('APC MINI');
+  });
+
+  it('validate against PROFILES recognizes already-correct DEVICEOUTs of either device', async () => {
+    const text = await loadText('/docs/midi-all-with-faders.xml');
+    const doc = parseXml(text);
+    const v = validate(doc, PROFILES);
+    expect(v.ok).to.equal(true); // file already has correct per-row DEVICEOUTs
   });
 });
 

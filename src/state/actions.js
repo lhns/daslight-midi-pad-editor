@@ -1,28 +1,57 @@
 // High-level state mutations. Components dispatch these instead of poking
 // the store directly, so behavior is testable in isolation.
 
-import { store } from './store.js';
+import { store, VIEW_KEYS, emptyView } from './store.js';
 import { parseXml, buildModel } from '../xml/parse.js';
 import { applyModelToDom, serialize } from '../xml/serialize.js';
 import { validate, applyFix } from '../xml/validate.js';
-import { detectProfile, getProfile } from '../devices/index.js';
+import { detectProfile, detectAllProfiles, getProfile, PROFILES } from '../devices/index.js';
 
 export async function loadFile(file) {
   const text = await file.text();
   const doc = parseXml(text);
-  const profile = detectProfile(doc) ?? getProfile('launchpad-mini-mk3');
-  const model = buildModel(doc, profile);
-  const v = validate(doc, profile);
+  const detected = detectAllProfiles(doc);
+  const detectedProfiles = detected.length ? detected : [getProfile('launchpad-mini-mk3')];
+  const activeProfile = detectedProfiles[0];
+
+  // One view (model + selection + clipboard + visibility) per detected profile.
+  const views = new Map();
+  for (const p of detectedProfiles) {
+    views.set(p.id, { ...emptyView(), model: buildModel(doc, p) });
+  }
+  const activeView = views.get(activeProfile.id);
+  const v = validate(doc, PROFILES);
+
   store.setState({
     document: doc,
-    profile,
+    detectedProfiles,
+    profile: activeProfile,
     fileName: file.name,
-    model,
-    selection: new Set(),
-    selectionAnchor: null,
+    views,
+    ...activeView,
     validation: v,
-    clipboard: null,
-    visibleControlStates: new Set(['off', 'on', 'fade']),
+  });
+}
+
+// Snapshot the current top-level view slots into the outgoing profile's view,
+// then hydrate the top-level slots from the incoming profile's stored view.
+export function switchActiveProfile(profileId) {
+  const state = store.getState();
+  if (!state.profile || state.profile.id === profileId) return;
+  const incoming = state.detectedProfiles.find((p) => p.id === profileId);
+  if (!incoming) return;
+  const views = new Map(state.views);
+  // Save outgoing.
+  const outgoingView = {};
+  for (const k of VIEW_KEYS) outgoingView[k] = state[k];
+  views.set(state.profile.id, outgoingView);
+  // Load incoming (or seed an empty view + a fresh model from doc).
+  const next = views.get(incoming.id) ?? { ...emptyView(), model: buildModel(state.document, incoming) };
+  views.set(incoming.id, next);
+  store.setState({
+    profile: incoming,
+    views,
+    ...next,
   });
 }
 
@@ -195,17 +224,27 @@ export function pasteVisible() {
 }
 
 export function fixDeviceOut() {
-  const { document: doc, profile, validation } = store.getState();
-  if (!doc || !profile || !validation) return;
-  applyFix(validation, profile);
-  const v2 = validate(doc, profile);
+  const { document: doc, validation } = store.getState();
+  if (!doc || !validation) return;
+  applyFix(validation);
+  const v2 = validate(doc, PROFILES);
   store.setState({ validation: v2 });
 }
 
 export function downloadCurrent() {
-  const { document: doc, profile, model, fileName } = store.getState();
-  if (!doc || !profile || !model) return;
-  applyModelToDom(model, profile);
+  const state = store.getState();
+  const { document: doc, profile, views, fileName } = state;
+  if (!doc || !profile) return;
+  // Save the active view back into the map first, then flush every view's
+  // model so edits made on any tab make it into the exported XML.
+  const allViews = new Map(views);
+  const activeSnapshot = {};
+  for (const k of VIEW_KEYS) activeSnapshot[k] = state[k];
+  allViews.set(profile.id, activeSnapshot);
+  for (const p of state.detectedProfiles) {
+    const view = allViews.get(p.id);
+    if (view?.model) applyModelToDom(view.model, p);
+  }
   const xml = serialize(doc);
   const blob = new Blob([xml], { type: 'application/xml' });
   const url = URL.createObjectURL(blob);
@@ -219,8 +258,10 @@ export function downloadCurrent() {
 export function reset() {
   store.setState({
     document: null,
+    detectedProfiles: [],
     profile: null,
     fileName: null,
+    views: new Map(),
     model: null,
     selection: new Set(),
     selectionAnchor: null,

@@ -1,6 +1,6 @@
 import { expect } from '@open-wc/testing';
 import { store } from '../../src/state/store.js';
-import { setAxisOnSelection, applyStateToSelection, toggleControlStateVisibility, copyVisible, pasteVisible } from '../../src/state/actions.js';
+import { setAxisOnSelection, applyStateToSelection, toggleControlStateVisibility, copyVisible, pasteVisible, switchActiveProfile, loadFile } from '../../src/state/actions.js';
 import { profile as apcMini } from '../../src/devices/akai-apc-mini/profile.js';
 import { profile as lpMk3 } from '../../src/devices/launchpad-mini-mk3/profile.js';
 
@@ -30,8 +30,10 @@ function loadModel(profile, initial) {
 
 function reset() {
   store.setState({
-    document: null, profile: null, fileName: null, model: null,
+    document: null, detectedProfiles: [], profile: null, fileName: null, model: null,
+    views: new Map(),
     selection: new Set(), selectionAnchor: null, validation: null, clipboard: null,
+    visibleControlStates: new Set(['off','on','fade']),
   });
 }
 
@@ -80,6 +82,71 @@ describe('setAxisOnSelection', () => {
     setAxisOnSelection('on', 'color', '5');
     // default mode is static, so the result is lp:5:static
     expect(store.getState().model.buttons.get(a.id).states.on.stateId).to.equal('lp:5:static');
+  });
+});
+
+describe('multi-device loadFile + switchActiveProfile', () => {
+  afterEach(() => reset());
+
+  async function loadFakeFile(path) {
+    const res = await fetch(path);
+    const text = await res.text();
+    const file = new File([text], path.split('/').pop(), { type: 'application/xml' });
+    await loadFile(file);
+  }
+
+  it('loadFile detects both profiles in a mixed file and seeds two views', async () => {
+    await loadFakeFile('/docs/midi-all-with-faders.xml');
+    const s = store.getState();
+    expect(s.detectedProfiles.map((p) => p.id).sort()).to.deep.equal(['akai-apc-mini', 'launchpad-mini-mk3']);
+    expect(s.views.size).to.equal(2);
+    expect(s.profile).to.exist;
+    // Active view is hydrated to top-level slots.
+    expect(s.model).to.exist;
+  });
+
+  it('switchActiveProfile preserves selection and clipboard per tab', async () => {
+    await loadFakeFile('/docs/midi-all-with-faders.xml');
+    const s0 = store.getState();
+    const firstId = s0.profile.id;
+    const otherId = s0.detectedProfiles.find((p) => p.id !== firstId).id;
+
+    // Make the first tab "dirty" with a selection and a clipboard.
+    store.setState({
+      selection: new Set(['5,3']),
+      selectionAnchor: '5,3',
+      clipboard: { on: 'sentinel-tab-1' },
+    });
+
+    switchActiveProfile(otherId);
+    const sB = store.getState();
+    expect(sB.profile.id).to.equal(otherId);
+    expect(sB.clipboard).to.equal(null); // fresh view for the new tab
+    expect([...sB.selection]).to.deep.equal([]);
+
+    // Make this tab dirty too.
+    store.setState({ selection: new Set(['2,1']), clipboard: { on: 'sentinel-tab-2' } });
+
+    // Switch back — first tab's state should resurface.
+    switchActiveProfile(firstId);
+    const sA = store.getState();
+    expect(sA.profile.id).to.equal(firstId);
+    expect([...sA.selection]).to.deep.equal(['5,3']);
+    expect(sA.clipboard).to.deep.equal({ on: 'sentinel-tab-1' });
+
+    // And the other tab's state should still be there too — switch back.
+    switchActiveProfile(otherId);
+    const sB2 = store.getState();
+    expect([...sB2.selection]).to.deep.equal(['2,1']);
+    expect(sB2.clipboard).to.deep.equal({ on: 'sentinel-tab-2' });
+  });
+
+  it('switchActiveProfile is a no-op for the active profile id', async () => {
+    await loadFakeFile('/docs/midi-all-with-faders.xml');
+    const before = store.getState();
+    switchActiveProfile(before.profile.id);
+    const after = store.getState();
+    expect(after.profile).to.equal(before.profile);
   });
 });
 

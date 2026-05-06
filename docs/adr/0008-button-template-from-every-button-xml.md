@@ -29,3 +29,14 @@ truth for what the device actually exposes.
 - Documenting the templates in `docs/` keeps the data origin obvious to
   future contributors.
 - Tests use the same template files as fixtures via `fetch('/docs/...')`.
+
+## Update — non-button SHORTCUTs survive round-trip
+Real Daslight files include SHORTCUTs that aren't buttons at all —
+the APC mini's nine track/master faders show up as CC events on
+notes 48–56 with no LED state to render. They aren't in any profile's
+`layout`, so `buildModel` skips them; `applyModelToDom` only writes
+attributes for entries in its model; `serialize()` then re-emits
+their DOM nodes verbatim. A test in `parse-serialize.test.js`
+snapshots the fader EVENT/ACTION/SETTINGS attributes pre and post a
+no-op edit cycle and asserts equality, so future changes to the
+write-path can't accidentally drop them.

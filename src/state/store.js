@@ -1,17 +1,36 @@
 // Tiny reactive store. The XML Document is held as the source of truth;
 // derived per-button state is recomputed on demand by the device profile.
 
+// The active view's per-profile slots are kept at the top level so components
+// can read state.model / state.selection / etc. without knowing about views.
+// switchActiveProfile in actions.js hot-swaps these slots from a Map keyed by
+// profile id, preserving each tab's state across switches.
 const initialState = {
   document: null,        // parsed XML Document
+  detectedProfiles: [],  // every device detected in the loaded file
   profile: null,         // active DeviceProfile
+  views: new Map(),      // profileId → snapshot of the per-profile view slots
   fileName: null,        // original upload filename
-  buttons: [],           // [{ addr, off, on, fade, shortcutEl }]
-  selection: new Set(),  // set of button ids ("row,col")
-  selectionAnchor: null, // last plain-clicked button id (for shift-rect range)
+  // Active-view slots (mirror of views.get(profile.id)):
+  model: null,
+  selection: new Set(),
+  selectionAnchor: null,
+  clipboard: null,
+  visibleControlStates: new Set(['off', 'on', 'fade']),
   validation: null,      // { ok, offenders: [...] } from validate.js
-  clipboard: null,       // { off?, on?, fade? } — slots are optional
-  visibleControlStates: new Set(['off', 'on', 'fade']), // pad+panel visibility filter
 };
+
+export const VIEW_KEYS = ['model', 'selection', 'selectionAnchor', 'clipboard', 'visibleControlStates'];
+
+export function emptyView() {
+  return {
+    model: null,
+    selection: new Set(),
+    selectionAnchor: null,
+    clipboard: null,
+    visibleControlStates: new Set(['off', 'on', 'fade']),
+  };
+}
 
 function createStore(initial) {
   let state = initial;
