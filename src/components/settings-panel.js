@@ -3,7 +3,10 @@ import { store } from '../state/store.js';
 import {
   setAxisOnSelection,
   copyAll, copyMode, pasteAll, pasteMode, copyVisible,
+  resolvePasteSlot,
 } from '../state/actions.js';
+
+const capitalize = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 import { buttonStyles } from '../styles/buttons.js';
 import './color-palette.js';
 
@@ -172,15 +175,18 @@ export class SettingsPanel extends LitElement {
 
       ${['off','on','fade']
         .filter((c) => !visibleControlStates || visibleControlStates.has(c))
-        .map((ctrl) => this._renderSection(ctrl, buttons, profile, allowedColorIds, single, clipboard))}
+        .map((ctrl) => this._renderSection(ctrl, buttons, profile, allowedColorIds, single, clipboard, this._state.clipboardLastSlot))}
     `;
   }
 
-  _renderSection(ctrl, buttons, profile, allowedColorIds, single, clipboard) {
+  _renderSection(ctrl, buttons, profile, allowedColorIds, single, clipboard, clipboardLastSlot) {
     const sharedStateId = sharedValue(buttons.map((b) => b.states[ctrl]?.stateId ?? null));
     const sharedState = sharedStateId ? profile.states.find((s) => s.id === sharedStateId) : null;
     const isOpen = this._open[ctrl];
-    const clipHas = clipboard && clipboard[ctrl] != null;
+    const resolvedSlot = resolvePasteSlot(clipboard, clipboardLastSlot, ctrl);
+    const pasteTitle = resolvedSlot && resolvedSlot !== ctrl
+      ? `Paste from ${capitalize(CONTROL_LABELS[resolvedSlot])}`
+      : 'Paste';
     const selectedModeId = (() => {
       if (!sharedStateId) return null;
       try { return profile.decompose(sharedStateId).modeId; }
@@ -215,7 +221,11 @@ export class SettingsPanel extends LitElement {
                 <div class="side-divider"></div>
               ` : null}
               ${single ? html`<button @click=${() => copyMode(single.addr.id, ctrl)}>Copy</button>` : null}
-              <button ?disabled=${!clipHas} @click=${() => pasteMode(ctrl)}>Paste</button>
+              <button
+                ?disabled=${resolvedSlot == null}
+                title=${pasteTitle}
+                @click=${() => pasteMode(ctrl)}
+              >Paste</button>
             </div>
           </div>
         </div>

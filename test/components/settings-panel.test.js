@@ -196,6 +196,31 @@ describe('<settings-panel>', () => {
     expect(store.getState().clipboard).to.deep.equal({ off: 'red', on: 'green', fade: 'yellow' });
   });
 
+  it('per-section Paste is enabled even if its slot is empty, as long as some slot is set', async () => {
+    loadModel(new Map([['5,3', { on: 'green' }]]));
+    store.setState({ clipboard: { off: 'red' }, clipboardLastSlot: 'off' });
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    const onDetails = [...el.shadowRoot.querySelectorAll('details')]
+      .find((d) => d.querySelector('.summary-label').textContent.trim() === 'On');
+    const pasteBtn = [...onDetails.querySelectorAll('.side-col button')]
+      .find((b) => b.textContent.trim() === 'Paste');
+    expect(pasteBtn.disabled).to.equal(false);
+    expect(pasteBtn.title).to.equal('Paste from Off');
+  });
+
+  it('per-section Paste tooltip is plain "Paste" when same-slot is available', async () => {
+    loadModel(new Map([['5,3', { on: 'green' }]]));
+    store.setState({ clipboard: { on: 'red' }, clipboardLastSlot: 'on' });
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    const onDetails = [...el.shadowRoot.querySelectorAll('details')]
+      .find((d) => d.querySelector('.summary-label').textContent.trim() === 'On');
+    const pasteBtn = [...onDetails.querySelectorAll('.side-col button')]
+      .find((b) => b.textContent.trim() === 'Paste');
+    expect(pasteBtn.title).to.equal('Paste');
+  });
+
   it('side-col has a "Mode" axis label above the mode buttons', async () => {
     loadModel(new Map([['5,3', { on: 'green' }]]));
     const el = await fixture(html`<settings-panel></settings-panel>`);

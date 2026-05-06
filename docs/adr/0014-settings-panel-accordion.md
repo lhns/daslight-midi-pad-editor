@@ -124,6 +124,21 @@ panel inside a deliberately too-narrow container and assert
 `offsetWidth >= 384` and `scrollWidth ≤ clientWidth + 1` for every
 side-col button.
 
+## Update — per-section Paste fallback (ADR 0026)
+The per-section Paste button now uses `resolvePasteSlot` to find a
+source: `clipboard[ctrl]` first, then the most recent single-slot
+copy (`clipboardLastSlot`), then the canonical 'on' → 'off' → 'fade'
+order as a defensive backstop. The button is enabled whenever the
+resolver finds anything; its `title` attribute reads "Paste from
+<Source>" when the resolved slot differs from the section's own slot
+— so the user sees the source on hover before clicking. Within-button
+cross-state copy (Off → On in the same button) works in the obvious
+two-click sequence: Copy in Off, Paste in On.
+
+`pasteAll` and `pasteVisible` are intentionally *not* on the resolver
+— they remain bulk paste operations that copy each populated
+clipboard slot into its matching target slot only.
+
 ## Update — top-level Copy button honors the pill filter
 "Copy all" now calls `copyVisible()` (the same action Ctrl+C uses)
 instead of `copyAll(addrId)`, so the pill filter applies the same way

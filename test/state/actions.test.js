@@ -1,6 +1,6 @@
 import { expect } from '@open-wc/testing';
 import { store } from '../../src/state/store.js';
-import { setAxisOnSelection, applyStateToSelection, toggleControlStateVisibility, copyVisible, pasteVisible, switchActiveProfile, loadFile, undo, redo } from '../../src/state/actions.js';
+import { setAxisOnSelection, applyStateToSelection, toggleControlStateVisibility, copyVisible, pasteVisible, switchActiveProfile, loadFile, undo, redo, copyMode, copyAll, pasteMode, pasteAll, resolvePasteSlot } from '../../src/state/actions.js';
 import { profile as apcMini } from '../../src/devices/akai-apc-mini/profile.js';
 import { profile as lpMk3 } from '../../src/devices/launchpad-mini-mk3/profile.js';
 
@@ -24,7 +24,8 @@ function loadModel(profile, initial) {
     document: {}, profile, fileName: 'fake.xml',
     model: { buttons, shortcuts: [] },
     selection: new Set([...initial.keys()]),
-    selectionAnchor: null, validation: null, clipboard: null,
+    selectionAnchor: null, validation: null,
+    clipboard: null, clipboardLastSlot: null,
     visibleControlStates: new Set(['off','on','fade']),
     history: { past: [], future: [] },
   });
@@ -34,7 +35,8 @@ function reset() {
   store.setState({
     document: null, detectedProfiles: [], profile: null, fileName: null, model: null,
     views: new Map(),
-    selection: new Set(), selectionAnchor: null, validation: null, clipboard: null,
+    selection: new Set(), selectionAnchor: null, validation: null,
+    clipboard: null, clipboardLastSlot: null,
     visibleControlStates: new Set(['off','on','fade']),
     history: { past: [], future: [] },
   });
@@ -150,6 +152,140 @@ describe('multi-device loadFile + switchActiveProfile', () => {
     switchActiveProfile(before.profile.id);
     const after = store.getState();
     expect(after.profile).to.equal(before.profile);
+  });
+});
+
+describe('pasteMode fallback (last-slot)', () => {
+  afterEach(() => reset());
+
+  it('within-button cross-state: copyMode Off → pasteMode On writes On = Off color', () => {
+    const id = '5,3';
+    loadModel(apcMini, new Map([[id, { off: 'red', on: 'off', fade: 'off' }]]));
+    copyMode(id, 'off');
+    expect(store.getState().clipboardLastSlot).to.equal('off');
+    pasteMode('on');
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('red');
+    expect(store.getState().model.buttons.get(id).states.off.stateId).to.equal('red'); // source unchanged
+  });
+
+  it('cross-button cross-state via lastSlot fallback', () => {
+    const a = '5,3', b = '5,4';
+    loadModel(apcMini, new Map([
+      [a, { off: 'red' }],
+      [b, { off: 'off', on: 'off' }],
+    ]));
+    copyMode(a, 'off');
+    store.setState({ selection: new Set([b]) });
+    pasteMode('on');
+    expect(store.getState().model.buttons.get(b).states.on.stateId).to.equal('red');
+  });
+
+  it('lastSlot tracks the most recent copy and wins in the fallback', () => {
+    const a = '5,3', b = '5,4';
+    loadModel(apcMini, new Map([
+      [a, { off: 'red', on: 'green' }],
+      [b, { off: 'off', on: 'off', fade: 'off' }],
+    ]));
+    copyMode(a, 'on');                    // lastSlot='on'
+    copyMode(a, 'off');                   // lastSlot='off'
+    store.setState({ selection: new Set([b]) });
+    pasteMode('fade');                    // fallback → lastSlot='off' → red
+    expect(store.getState().model.buttons.get(b).states.fade.stateId).to.equal('red');
+  });
+
+  it('copyAll clears lastSlot (fallback path is unreachable anyway)', () => {
+    const a = '5,3';
+    loadModel(apcMini, new Map([[a, { off: 'red', on: 'green', fade: 'yellow' }]]));
+    copyMode(a, 'off');
+    expect(store.getState().clipboardLastSlot).to.equal('off');
+    copyAll(a);
+    expect(store.getState().clipboardLastSlot).to.equal(null);
+  });
+
+  it('after copyAll, section-paste uses same-slot value (no fallback)', () => {
+    const a = '5,3', b = '5,4';
+    loadModel(apcMini, new Map([
+      [a, { off: 'red', on: 'green', fade: 'yellow' }],
+      [b, { off: 'off', on: 'off', fade: 'off' }],
+    ]));
+    copyAll(a);
+    store.setState({ selection: new Set([b]) });
+    pasteMode('fade');
+    expect(store.getState().model.buttons.get(b).states.fade.stateId).to.equal('yellow');
+  });
+
+  it('copyVisible with a single visible pill sets lastSlot to that slot', () => {
+    const a = '5,3';
+    loadModel(apcMini, new Map([[a, { off: 'red', on: 'green', fade: 'yellow' }]]));
+    store.setState({ visibleControlStates: new Set(['on']) });
+    copyVisible();
+    expect(store.getState().clipboard).to.deep.equal({ on: 'green' });
+    expect(store.getState().clipboardLastSlot).to.equal('on');
+  });
+
+  it('copyVisible with multiple visible pills clears lastSlot', () => {
+    const a = '5,3';
+    loadModel(apcMini, new Map([[a, { off: 'red', on: 'green', fade: 'yellow' }]]));
+    store.setState({ visibleControlStates: new Set(['on', 'fade']) });
+    copyVisible();
+    expect(store.getState().clipboardLastSlot).to.equal(null);
+  });
+
+  it('defensive fallback: lastSlot null + multiple slots → "on" wins', () => {
+    const b = '5,4';
+    loadModel(apcMini, new Map([[b, { off: 'off', on: 'off', fade: 'off' }]]));
+    store.setState({
+      selection: new Set([b]),
+      clipboard: { off: 'red', on: 'green' },
+      clipboardLastSlot: null,
+    });
+    pasteMode('fade');
+    expect(store.getState().model.buttons.get(b).states.fade.stateId).to.equal('green');
+  });
+
+  it('paste with empty clipboard is a no-op', () => {
+    const id = '5,3';
+    loadModel(apcMini, new Map([[id, { on: 'green' }]]));
+    pasteMode('on');
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('green');
+  });
+
+  it('pasteAll has no fallback semantics', () => {
+    const a = '5,3', b = '5,4';
+    loadModel(apcMini, new Map([
+      [a, { off: 'red' }],
+      [b, { off: 'off', on: 'off', fade: 'off' }],
+    ]));
+    copyMode(a, 'off');
+    store.setState({ selection: new Set([b]) });
+    pasteAll();
+    const m = store.getState().model.buttons.get(b);
+    expect(m.states.off.stateId).to.equal('red');
+    expect(m.states.on.stateId).to.equal('off');     // unchanged
+    expect(m.states.fade.stateId).to.equal('off');   // unchanged
+  });
+
+  it('pasteVisible (Ctrl+V) has no fallback semantics', () => {
+    const a = '5,3', b = '5,4';
+    loadModel(apcMini, new Map([
+      [a, { off: 'red' }],
+      [b, { off: 'off', on: 'off', fade: 'off' }],
+    ]));
+    copyMode(a, 'off');
+    store.setState({
+      selection: new Set([b]),
+      visibleControlStates: new Set(['on']),
+    });
+    pasteVisible();
+    expect(store.getState().model.buttons.get(b).states.on.stateId).to.equal('off'); // no-op
+  });
+
+  it('resolvePasteSlot handles all paths', () => {
+    expect(resolvePasteSlot(null, null, 'on')).to.equal(null);
+    expect(resolvePasteSlot({ on: 'x' }, null, 'on')).to.equal('on');         // same-slot
+    expect(resolvePasteSlot({ off: 'x' }, 'off', 'on')).to.equal('off');      // lastSlot
+    expect(resolvePasteSlot({ fade: 'x' }, null, 'on')).to.equal('fade');     // canonical: only 'fade' set
+    expect(resolvePasteSlot({ off: 'x', on: 'y' }, null, 'fade')).to.equal('on'); // canonical 'on' wins
   });
 });
 

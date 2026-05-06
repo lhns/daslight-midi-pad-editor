@@ -16,13 +16,14 @@ const initialState = {
   selection: new Set(),
   selectionAnchor: null,
   clipboard: null,
+  clipboardLastSlot: null,  // 'off' | 'on' | 'fade' | null — most recent single-slot copy
   visibleControlStates: new Set(['off', 'on', 'fade']),
   history: { past: [], future: [] },
   validation: null,      // { ok, offenders: [...] } from validate.js
   loadError: null,       // last loadFile error (string), shown under the drop hint
 };
 
-export const VIEW_KEYS = ['model', 'selection', 'selectionAnchor', 'clipboard', 'visibleControlStates', 'history'];
+export const VIEW_KEYS = ['model', 'selection', 'selectionAnchor', 'clipboard', 'clipboardLastSlot', 'visibleControlStates', 'history'];
 
 export function emptyView() {
   return {
@@ -30,6 +31,7 @@ export function emptyView() {
     selection: new Set(),
     selectionAnchor: null,
     clipboard: null,
+    clipboardLastSlot: null,
     visibleControlStates: new Set(['off', 'on', 'fade']),
     history: { past: [], future: [] },
   };

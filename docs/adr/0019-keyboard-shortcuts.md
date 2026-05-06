@@ -53,6 +53,14 @@ button label flips to "Copy selected" whenever the pill filter is
 active, hinting that the result will be partial. See ADR 0014 for the
 panel-side write-up.
 
+## Update — Ctrl+V never falls back across slots (ADR 0026)
+Per-section Paste in the inspector uses a resolver that falls back
+across slots when the target's own slot is empty. `pasteVisible`
+(Ctrl+V) deliberately does **not** — it remains a bulk operation that
+writes each populated clipboard slot into its matching pill-visible
+target slot. If a user wants cross-state paste, the per-section
+button is the right surface.
+
 ## Update — Undo / Redo (ADR 0025)
 The same `handleKeyShortcut` function in `app.js` adds three
 bindings: `Ctrl/Cmd+Z` → `undo()`, `Ctrl/Cmd+Y` → `redo()`,

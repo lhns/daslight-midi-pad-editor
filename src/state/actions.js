@@ -30,6 +30,7 @@ export async function loadFile(file) {
       fileName: file.name,
       views,
       ...activeView,
+      clipboardLastSlot: null,
       validation: v,
       loadError: null,
     });
@@ -198,7 +199,9 @@ export function setAxisOnSelection(controlState, axis, value) {
 export const applyToSelection = applyStateToSelection;
 
 // Copy all three control states (off/on/fade) from a single button into the
-// clipboard. Replaces the clipboard entirely.
+// clipboard. Replaces the clipboard entirely. clipboardLastSlot is cleared:
+// after copyAll, every slot is filled, so the paste fallback can never be
+// reached — the value is irrelevant.
 export function copyAll(addrId) {
   const { model } = store.getState();
   const m = model.buttons.get(addrId);
@@ -209,11 +212,14 @@ export function copyAll(addrId) {
       on: m.states.on?.stateId ?? null,
       fade: m.states.fade?.stateId ?? null,
     },
+    clipboardLastSlot: null,
   });
 }
 
 // Copy just one control state from a single button into the clipboard,
-// preserving any other slots already in the clipboard.
+// preserving any other slots already in the clipboard. Tracks this as the
+// most recent single-slot copy so per-section paste in another slot can
+// fall back to it.
 export function copyMode(addrId, controlState) {
   const { model, clipboard } = store.getState();
   const m = model.buttons.get(addrId);
@@ -221,7 +227,22 @@ export function copyMode(addrId, controlState) {
   const stateId = m.states[controlState]?.stateId ?? null;
   store.setState({
     clipboard: { ...(clipboard ?? {}), [controlState]: stateId },
+    clipboardLastSlot: controlState,
   });
+}
+
+// Resolve which clipboard slot a per-section paste should read from, given
+// the target control state. Same-slot wins, then the most recent single
+// copy, then the first non-empty slot in canonical 'on' → 'off' → 'fade'
+// order as a defensive backstop. Returns null if the clipboard is empty.
+export function resolvePasteSlot(clipboard, lastSlot, ctrl) {
+  if (!clipboard) return null;
+  if (clipboard[ctrl] != null) return ctrl;
+  if (lastSlot != null && clipboard[lastSlot] != null) return lastSlot;
+  for (const c of ['on', 'off', 'fade']) {
+    if (clipboard[c] != null) return c;
+  }
+  return null;
 }
 
 // Paste every populated clipboard slot to every selected button.
@@ -245,17 +266,21 @@ export function pasteAll() {
   store.setState({ model: { ...model } });
 }
 
-// Paste just one slot to every selected button.
+// Paste just one slot to every selected button. Uses resolvePasteSlot so
+// the source can fall back to clipboardLastSlot or the canonical defensive
+// order when the target slot is empty in the clipboard — that's how
+// cross-state copy (Off → On in the same button) works.
 export function pasteMode(controlState) {
   const pre = store.getState();
-  if (!pre.clipboard || pre.clipboard[controlState] == null) return;
+  const slot = resolvePasteSlot(pre.clipboard, pre.clipboardLastSlot, controlState);
+  if (slot == null) return;
   pushHistory();
   const { model, selection, clipboard } = store.getState();
   for (const id of selection) {
     const m = model.buttons.get(id);
     if (!m?.bound) continue;
     m.states[controlState] = {
-      stateId: clipboard[controlState],
+      stateId: clipboard[slot],
       raw: m.states[controlState]?.raw ?? null,
       dirty: true,
     };
@@ -278,10 +303,16 @@ export function copyVisible() {
   if (!id) return;
   const m = model.buttons.get(id);
   const clip = {};
+  let written = [];
   for (const ctrl of visibleControlStates) {
-    clip[ctrl] = m.states[ctrl]?.stateId ?? null;
+    const v = m.states[ctrl]?.stateId ?? null;
+    clip[ctrl] = v;
+    if (v != null) written.push(ctrl);
   }
-  store.setState({ clipboard: clip });
+  // Track lastSlot only when exactly one slot got an actual value; otherwise
+  // there's no unambiguous "most recent single source" to fall back to.
+  const lastSlot = written.length === 1 ? written[0] : null;
+  store.setState({ clipboard: clip, clipboardLastSlot: lastSlot });
 }
 
 // Paste only the slots in the intersection of the clipboard and the current
@@ -359,6 +390,7 @@ export function reset() {
     selectionAnchor: null,
     validation: null,
     clipboard: null,
+    clipboardLastSlot: null,
     visibleControlStates: new Set(['off', 'on', 'fade']),
     loadError: null,
   });
