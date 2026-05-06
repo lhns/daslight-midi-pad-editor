@@ -110,6 +110,72 @@ describe('<settings-panel>', () => {
     expect(labels).to.deep.equal(['Off', 'Fade']);
   });
 
+  it('renders accordion bodies with picker-row + side-col layout', async () => {
+    loadModel(new Map([['5,3', { off: 'off', on: 'green', fade: 'red-blink' }]]));
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    const firstBody = el.shadowRoot.querySelector('details .body');
+    const row = firstBody.querySelector('.picker-row');
+    expect(row).to.exist;
+    expect(row.firstElementChild.tagName.toLowerCase()).to.equal('color-palette');
+    const sideCol = row.querySelector('.side-col');
+    expect(sideCol).to.exist;
+  });
+
+  it('side-col contains modes + Copy + Paste for a single APC mini selection', async () => {
+    // APC mini has 2 modes (static, flash); single button is selected.
+    loadModel(new Map([['5,3', { off: 'off', on: 'green', fade: 'off' }]]));
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    const sideCol = el.shadowRoot.querySelector('details .side-col');
+    const buttons = sideCol.querySelectorAll('button');
+    // 2 modes + Copy + Paste
+    expect(buttons.length).to.equal(4);
+    const labels = [...buttons].map((b) => b.textContent.trim());
+    expect(labels).to.include('Copy');
+    expect(labels).to.include('Paste');
+    expect(labels).to.include('Static');
+    expect(labels).to.include('Flash');
+  });
+
+  it('side-col drops Copy when more than one button is selected', async () => {
+    loadModel(new Map([
+      ['5,3', { on: 'green' }],
+      ['5,4', { on: 'red' }],
+    ]));
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    const sideCol = el.shadowRoot.querySelector('details .side-col');
+    const labels = [...sideCol.querySelectorAll('button')].map((b) => b.textContent.trim());
+    expect(labels).to.not.include('Copy');
+    expect(labels).to.include('Paste');
+  });
+
+  it('Paste buttons show plain text (no "(empty)" suffix) when clipboard is empty', async () => {
+    loadModel(new Map([['5,3', { on: 'green' }]]));
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    const allText = el.shadowRoot.textContent;
+    expect(allText).not.to.contain('(empty)');
+    const pasteAll = [...el.shadowRoot.querySelectorAll('.actions button')].find((b) => b.textContent.trim() === 'Paste all');
+    expect(pasteAll).to.exist;
+    expect(pasteAll.disabled).to.equal(true);
+  });
+
+  it('clicking a side-col mode button updates the model via setAxisOnSelection', async () => {
+    loadModel(new Map([['5,3', { on: 'green' }]]));
+    const el = await fixture(html`<settings-panel></settings-panel>`);
+    await el.updateComplete;
+    // Find the "On" details and the Flash button inside its side-col.
+    const allDetails = el.shadowRoot.querySelectorAll('details');
+    const onDetails = [...allDetails].find((d) => d.querySelector('.summary-label').textContent.trim() === 'On');
+    const flash = [...onDetails.querySelectorAll('.side-col button')].find((b) => b.textContent.trim() === 'Flash');
+    expect(flash).to.exist;
+    flash.click();
+    await el.updateComplete;
+    expect(store.getState().model.buttons.get('5,3').states.on.stateId).to.equal('green-blink');
+  });
+
   it('scrolls internally rather than growing past its container', async () => {
     loadModel(new Map([['5,3', { off: 'red', on: 'green', fade: 'yellow' }]]));
     // Mount inside a 400px-tall container with overflow:hidden, mimicking <main>.

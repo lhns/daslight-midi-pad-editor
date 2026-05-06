@@ -43,6 +43,40 @@ describe('<color-palette> swatch sizing', () => {
     }
   });
 
+  it('renders only the color grid, no .modes container', async () => {
+    const wrap = await fixture(html`
+      <div>
+        <color-palette
+          .profile=${lpMk3}
+          .allowedColorIds=${lpMk3.colorAxis.map((c) => c.id)}
+        ></color-palette>
+      </div>
+    `);
+    const palette = wrap.querySelector('color-palette');
+    await palette.updateComplete;
+    expect(palette.shadowRoot.querySelector('.modes')).to.equal(null);
+    expect(palette.shadowRoot.querySelector('.colors')).to.exist;
+  });
+
+  it('emits color-pick on swatch click; never mode-pick', async () => {
+    const wrap = await fixture(html`
+      <div>
+        <color-palette
+          .profile=${apcMini}
+          .allowedColorIds=${apcMini.colorAxis.map((c) => c.id)}
+        ></color-palette>
+      </div>
+    `);
+    const palette = wrap.querySelector('color-palette');
+    await palette.updateComplete;
+    const events = [];
+    palette.addEventListener('color-pick', (e) => events.push({ type: 'color', detail: e.detail }));
+    palette.addEventListener('mode-pick', (e) => events.push({ type: 'mode', detail: e.detail }));
+    palette.shadowRoot.querySelectorAll('.swatch')[1].click(); // green
+    await palette.updateComplete;
+    expect(events.map((e) => e.type)).to.deep.equal(['color']);
+  });
+
   it('the colors grid never exceeds the 8-column max-width', async () => {
     const wrap = await fixture(html`
       <div style="width: 1200px;">

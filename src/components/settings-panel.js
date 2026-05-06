@@ -81,8 +81,22 @@ export class SettingsPanel extends LitElement {
       padding: 0.5rem 0.75rem 0.75rem;
       border-top: 1px solid var(--border);
     }
-    .mode-actions {
-      display: flex; gap: 0.5rem; margin-top: 0.6rem;
+    .picker-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .side-col {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .side-col button { white-space: nowrap; }
+    .side-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
     }
     .unbound-warn {
       background: rgba(217, 119, 6, 0.15);
@@ -131,7 +145,7 @@ export class SettingsPanel extends LitElement {
       <div class="actions">
         ${single ? html`<button class="primary" @click=${() => copyAll(single.addr.id)}>Copy all</button>` : null}
         <button ?disabled=${!clipboardHasAny} @click=${() => pasteAll()}>
-          Paste all${clipboardHasAny ? '' : ' (empty)'}
+          Paste all
         </button>
       </div>
 
@@ -146,6 +160,12 @@ export class SettingsPanel extends LitElement {
     const sharedState = sharedStateId ? profile.states.find((s) => s.id === sharedStateId) : null;
     const isOpen = this._open[ctrl];
     const clipHas = clipboard && clipboard[ctrl] != null;
+    const selectedModeId = (() => {
+      if (!sharedStateId) return null;
+      try { return profile.decompose(sharedStateId).modeId; }
+      catch { return null; }
+    })();
+    const showModes = profile.modeAxis.length > 1;
 
     return html`
       <details ?open=${isOpen} @toggle=${(e) => this._open = { ...this._open, [ctrl]: e.currentTarget.open }}>
@@ -155,18 +175,26 @@ export class SettingsPanel extends LitElement {
           ${sharedState ? html`<span class="swatch" style=${`background:${sharedState.hex}`}></span>` : null}
         </summary>
         <div class="body">
-          <color-palette
-            .profile=${profile}
-            .allowedColorIds=${allowedColorIds}
-            .selectedStateId=${sharedStateId ?? ''}
-            @color-pick=${(e) => setAxisOnSelection(ctrl, 'color', e.detail.colorId)}
-            @mode-pick=${(e) => setAxisOnSelection(ctrl, 'mode', e.detail.modeId)}
-          ></color-palette>
-          <div class="mode-actions">
-            ${single ? html`<button @click=${() => copyMode(single.addr.id, ctrl)}>Copy</button>` : null}
-            <button ?disabled=${!clipHas} @click=${() => pasteMode(ctrl)}>
-              Paste${clipHas ? '' : ' (empty)'}
-            </button>
+          <div class="picker-row">
+            <color-palette
+              .profile=${profile}
+              .allowedColorIds=${allowedColorIds}
+              .selectedStateId=${sharedStateId ?? ''}
+              @color-pick=${(e) => setAxisOnSelection(ctrl, 'color', e.detail.colorId)}
+            ></color-palette>
+            <div class="side-col">
+              ${showModes ? html`
+                ${profile.modeAxis.map((m) => html`
+                  <button
+                    class=${selectedModeId === m.id ? 'selected' : ''}
+                    @click=${() => setAxisOnSelection(ctrl, 'mode', m.id)}
+                  >${m.label}</button>
+                `)}
+                <div class="side-divider"></div>
+              ` : null}
+              ${single ? html`<button @click=${() => copyMode(single.addr.id, ctrl)}>Copy</button>` : null}
+              <button ?disabled=${!clipHas} @click=${() => pasteMode(ctrl)}>Paste</button>
+            </div>
           </div>
         </div>
       </details>

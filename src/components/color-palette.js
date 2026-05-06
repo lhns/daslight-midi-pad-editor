@@ -1,13 +1,10 @@
 import { LitElement, html, css } from 'lit';
 import { buttonStyles } from '../styles/buttons.js';
 
-// Profile-driven LED state picker. Renders the profile's colorAxis as a row
-// of swatches with the modeAxis below. Disabled state for swatches whose id
-// isn't in `allowedColorIds`.
-//
-// Picks are emitted per-axis (`color-pick` / `mode-pick`) so the consuming
-// settings panel can edit one axis at a time across a mixed selection
-// without forcing the other axis to a fallback value.
+// Color picker for the active device profile. Renders the colorAxis as a
+// fixed-size swatch grid (max 8 columns). Mode selection is rendered by the
+// settings panel itself, alongside Copy/Paste, in a sibling side column —
+// this component only emits `color-pick`.
 export class ColorPalette extends LitElement {
   static properties = {
     profile: { attribute: false },
@@ -28,13 +25,9 @@ export class ColorPalette extends LitElement {
         display: grid;
         grid-template-columns: repeat(auto-fill, var(--swatch-size));
         gap: var(--swatch-gap);
-        margin-bottom: 8px;
         max-width: calc(var(--swatch-cols) * var(--swatch-size) + (var(--swatch-cols) - 1) * var(--swatch-gap));
         justify-content: start;
       }
-      .modes { display: flex; gap: 4px; flex-wrap: wrap; }
-      /* Swatches are color samples, not generic buttons — keep them locally
-         styled so the shared button rule doesn't swap their fill. */
       .swatch {
         width: var(--swatch-size);
         height: var(--swatch-size);
@@ -44,12 +37,12 @@ export class ColorPalette extends LitElement {
         cursor: pointer;
         padding: 0;
         background: var(--panel-2);
-        font-size: 0; /* override shared button font-size; cells are square */
+        font-size: 0;
         line-height: 0;
       }
       .swatch.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
       .swatch.disabled { opacity: 0.18; cursor: not-allowed; }
-      .axis-label { font-size: 0.75rem; color: var(--muted); margin: 4px 0; }
+      .axis-label { font-size: 0.75rem; color: var(--muted); margin: 0 0 4px; }
     `,
   ];
 
@@ -73,18 +66,6 @@ export class ColorPalette extends LitElement {
           ></button>
         `)}
       </div>
-      ${profile.modeAxis.length > 1 ? html`
-        <div class="axis-label">Mode</div>
-        <div class="modes">
-          ${profile.modeAxis.map((m) => html`
-            <button
-              type="button"
-              class=${sel?.modeId === m.id ? 'selected' : ''}
-              @click=${() => this._pickMode(m.id)}
-            >${m.label}</button>
-          `)}
-        </div>
-      ` : null}
     `;
   }
 
@@ -96,9 +77,6 @@ export class ColorPalette extends LitElement {
 
   _pickColor(colorId) {
     this.dispatchEvent(new CustomEvent('color-pick', { detail: { colorId }, bubbles: true, composed: true }));
-  }
-  _pickMode(modeId) {
-    this.dispatchEvent(new CustomEvent('mode-pick', { detail: { modeId }, bubbles: true, composed: true }));
   }
 }
 
