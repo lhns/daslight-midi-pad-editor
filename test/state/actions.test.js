@@ -1,6 +1,6 @@
 import { expect } from '@open-wc/testing';
 import { store } from '../../src/state/store.js';
-import { setAxisOnSelection, applyStateToSelection, toggleControlStateVisibility, copyVisible, pasteVisible, switchActiveProfile, loadFile } from '../../src/state/actions.js';
+import { setAxisOnSelection, applyStateToSelection, toggleControlStateVisibility, copyVisible, pasteVisible, switchActiveProfile, loadFile, undo, redo } from '../../src/state/actions.js';
 import { profile as apcMini } from '../../src/devices/akai-apc-mini/profile.js';
 import { profile as lpMk3 } from '../../src/devices/launchpad-mini-mk3/profile.js';
 
@@ -25,6 +25,8 @@ function loadModel(profile, initial) {
     model: { buttons, shortcuts: [] },
     selection: new Set([...initial.keys()]),
     selectionAnchor: null, validation: null, clipboard: null,
+    visibleControlStates: new Set(['off','on','fade']),
+    history: { past: [], future: [] },
   });
 }
 
@@ -34,6 +36,7 @@ function reset() {
     views: new Map(),
     selection: new Set(), selectionAnchor: null, validation: null, clipboard: null,
     visibleControlStates: new Set(['off','on','fade']),
+    history: { past: [], future: [] },
   });
 }
 
@@ -147,6 +150,86 @@ describe('multi-device loadFile + switchActiveProfile', () => {
     switchActiveProfile(before.profile.id);
     const after = store.getState();
     expect(after.profile).to.equal(before.profile);
+  });
+});
+
+describe('undo / redo', () => {
+  afterEach(() => reset());
+
+  it('undo restores the on-state previously held by an edited button', () => {
+    const id = '5,3';
+    loadModel(apcMini, new Map([[id, { on: 'green' }]]));
+    setAxisOnSelection('on', 'color', 'red');
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('red');
+    undo();
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('green');
+  });
+
+  it('redo replays an undone edit', () => {
+    const id = '5,3';
+    loadModel(apcMini, new Map([[id, { on: 'green' }]]));
+    setAxisOnSelection('on', 'color', 'red');
+    undo();
+    redo();
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('red');
+  });
+
+  it('multiple edits stack and unwind in LIFO order', () => {
+    const id = '5,3';
+    loadModel(apcMini, new Map([[id, { on: 'green' }]]));
+    setAxisOnSelection('on', 'color', 'red');     // → red
+    setAxisOnSelection('on', 'mode', 'flash');    // → red-blink
+    undo();
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('red');
+    undo();
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('green');
+  });
+
+  it('a new edit clears the future stack', () => {
+    const id = '5,3';
+    loadModel(apcMini, new Map([[id, { on: 'green' }]]));
+    setAxisOnSelection('on', 'color', 'red');
+    undo();                                       // back to green
+    setAxisOnSelection('on', 'color', 'yellow');  // future cleared
+    redo();                                       // no-op
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('yellow');
+  });
+
+  it('paste-all is one undo step (multi-button)', () => {
+    const a = '5,3', b = '5,4';
+    loadModel(apcMini, new Map([
+      [a, { on: 'green' }],
+      [b, { on: 'green' }],
+    ]));
+    store.setState({ clipboard: { on: 'red' } });
+    applyStateToSelection('on', 'red');
+    expect(store.getState().model.buttons.get(a).states.on.stateId).to.equal('red');
+    expect(store.getState().model.buttons.get(b).states.on.stateId).to.equal('red');
+    undo();
+    expect(store.getState().model.buttons.get(a).states.on.stateId).to.equal('green');
+    expect(store.getState().model.buttons.get(b).states.on.stateId).to.equal('green');
+  });
+
+  it('pasteVisible lands as a single undo step regardless of slot count', () => {
+    const id = '5,3';
+    loadModel(apcMini, new Map([[id, { off: 'off', on: 'green', fade: 'off' }]]));
+    store.setState({ clipboard: { off: 'red', on: 'red', fade: 'red' } });
+    pasteVisible();
+    expect(store.getState().model.buttons.get(id).states.off.stateId).to.equal('red');
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('red');
+    expect(store.getState().model.buttons.get(id).states.fade.stateId).to.equal('red');
+    undo();
+    const m = store.getState().model.buttons.get(id);
+    expect(m.states.off.stateId).to.equal('off');
+    expect(m.states.on.stateId).to.equal('green');
+    expect(m.states.fade.stateId).to.equal('off');
+  });
+
+  it('undo is a no-op when the past stack is empty', () => {
+    const id = '5,3';
+    loadModel(apcMini, new Map([[id, { on: 'green' }]]));
+    undo(); // no past
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('green');
   });
 });
 

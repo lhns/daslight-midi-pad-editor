@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { store } from './state/store.js';
 import { installGlobalSync } from './lib/anim-sync.js';
-import { copyVisible, pasteVisible, loadFile } from './state/actions.js';
+import { copyVisible, pasteVisible, loadFile, undo, redo } from './state/actions.js';
 import './components/toolbar.js';
 import './components/launchpad-grid.js';
 import './components/settings-panel.js';
@@ -171,6 +171,15 @@ function handleKeyShortcut(e) {
     e.preventDefault();
   } else if (key === 'v') {
     pasteVisible();
+    e.preventDefault();
+  } else if (key === 'z' && e.shiftKey) {
+    redo();
+    e.preventDefault();
+  } else if (key === 'z') {
+    undo();
+    e.preventDefault();
+  } else if (key === 'y') {
+    redo();
     e.preventDefault();
   }
 }

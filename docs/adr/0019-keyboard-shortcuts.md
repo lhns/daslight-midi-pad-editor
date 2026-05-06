@@ -52,3 +52,11 @@ The top-level Copy button in the settings panel now also calls
 button label flips to "Copy selected" whenever the pill filter is
 active, hinting that the result will be partial. See ADR 0014 for the
 panel-side write-up.
+
+## Update — Undo / Redo (ADR 0025)
+The same `handleKeyShortcut` function in `app.js` adds three
+bindings: `Ctrl/Cmd+Z` → `undo()`, `Ctrl/Cmd+Y` → `redo()`,
+`Ctrl/Cmd+Shift+Z` → `redo()`. The Shift branch is checked first so
+Ctrl+Shift+Z isn't swallowed by the plain-Z branch. Same form-control
+skip applies. ADR 0025 covers the per-profile snapshot history that
+backs these shortcuts.

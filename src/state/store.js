@@ -17,11 +17,12 @@ const initialState = {
   selectionAnchor: null,
   clipboard: null,
   visibleControlStates: new Set(['off', 'on', 'fade']),
+  history: { past: [], future: [] },
   validation: null,      // { ok, offenders: [...] } from validate.js
   loadError: null,       // last loadFile error (string), shown under the drop hint
 };
 
-export const VIEW_KEYS = ['model', 'selection', 'selectionAnchor', 'clipboard', 'visibleControlStates'];
+export const VIEW_KEYS = ['model', 'selection', 'selectionAnchor', 'clipboard', 'visibleControlStates', 'history'];
 
 export function emptyView() {
   return {
@@ -30,6 +31,7 @@ export function emptyView() {
     selectionAnchor: null,
     clipboard: null,
     visibleControlStates: new Set(['off', 'on', 'fade']),
+    history: { past: [], future: [] },
   };
 }
 

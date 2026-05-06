@@ -67,6 +67,66 @@ export function setSelection(selection) {
 
 import { applySelectionMode } from '../lib/selection.js';
 
+const HISTORY_MAX = 100;
+
+// Snapshot just the LED-state slots of every button. DOM refs and addr metadata
+// don't change, so we don't capture them. The clone is shallow per slot — slots
+// are tiny { stateId, raw, dirty } objects, never mutated in place.
+function snapshotStates(model) {
+  if (!model) return null;
+  const out = new Map();
+  for (const [id, b] of model.buttons) {
+    out.set(id, {
+      off:  b.states.off  ? { ...b.states.off  } : null,
+      on:   b.states.on   ? { ...b.states.on   } : null,
+      fade: b.states.fade ? { ...b.states.fade } : null,
+    });
+  }
+  return out;
+}
+
+function restoreStates(model, snap) {
+  if (!model || !snap) return;
+  for (const [id, slots] of snap) {
+    const b = model.buttons.get(id);
+    if (!b) continue;
+    b.states.off  = slots.off  ? { ...slots.off  } : null;
+    b.states.on   = slots.on   ? { ...slots.on   } : null;
+    b.states.fade = slots.fade ? { ...slots.fade } : null;
+  }
+}
+
+// Push the current states snapshot to the past stack and clear future.
+// Called as the first step of every model-mutating action; future is wiped
+// because a new edit branches off whatever the user did last.
+function pushHistory() {
+  const { model, history } = store.getState();
+  if (!model) return;
+  const past = [...(history?.past ?? []), snapshotStates(model)];
+  if (past.length > HISTORY_MAX) past.shift();
+  store.setState({ history: { past, future: [] } });
+}
+
+export function undo() {
+  const { model, history } = store.getState();
+  if (!model || !history?.past?.length) return;
+  const past = [...history.past];
+  const restoreSnap = past.pop();
+  const future = [snapshotStates(model), ...(history.future ?? [])];
+  restoreStates(model, restoreSnap);
+  store.setState({ model: { ...model }, history: { past, future } });
+}
+
+export function redo() {
+  const { model, history } = store.getState();
+  if (!model || !history?.future?.length) return;
+  const future = [...history.future];
+  const next = future.shift();
+  const past = [...(history.past ?? []), snapshotStates(model)];
+  restoreStates(model, next);
+  store.setState({ model: { ...model }, history: { past, future } });
+}
+
 // Apply a click in the grid: picks a selection mode from the event, computes
 // the next selection (and anchor) from the model layout, and writes both.
 export function selectFromClick(targetId, mode) {
@@ -95,6 +155,7 @@ export function setButtonState(addrId, controlState, stateId) {
 // Apply a fully-formed stateId to the given control state on every selected
 // button. Used by paste paths; not for picker clicks (those edit per-axis).
 export function applyStateToSelection(controlState, stateId) {
+  pushHistory();
   const { model, selection } = store.getState();
   for (const id of selection) {
     const m = model.buttons.get(id);
@@ -112,6 +173,7 @@ export function applyStateToSelection(controlState, stateId) {
 // the other axis per-button. Skips buttons whose allowedColorIds rejects the
 // new color rather than forcing a constraint break.
 export function setAxisOnSelection(controlState, axis, value) {
+  pushHistory();
   const { model, selection, profile } = store.getState();
   if (!profile) return;
   for (const id of selection) {
@@ -164,8 +226,10 @@ export function copyMode(addrId, controlState) {
 
 // Paste every populated clipboard slot to every selected button.
 export function pasteAll() {
-  const { model, selection, clipboard } = store.getState();
+  const { clipboard } = store.getState();
   if (!clipboard) return;
+  pushHistory();
+  const { model, selection } = store.getState();
   for (const id of selection) {
     const m = model.buttons.get(id);
     if (!m?.bound) continue;
@@ -183,8 +247,10 @@ export function pasteAll() {
 
 // Paste just one slot to every selected button.
 export function pasteMode(controlState) {
+  const pre = store.getState();
+  if (!pre.clipboard || pre.clipboard[controlState] == null) return;
+  pushHistory();
   const { model, selection, clipboard } = store.getState();
-  if (!clipboard || clipboard[controlState] == null) return;
   for (const id of selection) {
     const m = model.buttons.get(id);
     if (!m?.bound) continue;
@@ -220,13 +286,33 @@ export function copyVisible() {
 
 // Paste only the slots in the intersection of the clipboard and the current
 // pill filter. Slots present in the clipboard but currently hidden are
-// ignored; visible slots not in the clipboard are skipped.
+// ignored; visible slots not in the clipboard are skipped. Inlined (rather
+// than calling pasteMode in a loop) so the operation lands as a single undo
+// step.
 export function pasteVisible() {
-  const { clipboard, visibleControlStates } = store.getState();
-  if (!clipboard) return;
+  const pre = store.getState();
+  if (!pre.clipboard) return;
+  const { clipboard, visibleControlStates } = pre;
+  let hasAny = false;
   for (const ctrl of visibleControlStates) {
-    if (clipboard[ctrl] != null) pasteMode(ctrl);
+    if (clipboard[ctrl] != null) { hasAny = true; break; }
   }
+  if (!hasAny) return;
+  pushHistory();
+  const { model, selection } = store.getState();
+  for (const id of selection) {
+    const m = model.buttons.get(id);
+    if (!m?.bound) continue;
+    for (const ctrl of visibleControlStates) {
+      if (clipboard[ctrl] == null) continue;
+      m.states[ctrl] = {
+        stateId: clipboard[ctrl],
+        raw: m.states[ctrl]?.raw ?? null,
+        dirty: true,
+      };
+    }
+  }
+  store.setState({ model: { ...model } });
 }
 
 export function fixDeviceOut() {

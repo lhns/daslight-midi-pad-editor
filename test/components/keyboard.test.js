@@ -35,6 +35,54 @@ function reset() {
   });
 }
 
+describe('keyboard shortcuts: undo / redo on <app-root>', () => {
+  afterEach(() => reset());
+
+  it('Ctrl+Z undoes the last edit; Ctrl+Y replays it', async () => {
+    const id = '5,3';
+    loadModel(new Map([[id, { on: 'green' }]]));
+    await fixture(html`<app-root></app-root>`);
+    // simulate an edit by mutating model + pushing a history step manually
+    const state = store.getState();
+    state.history = { past: [snapshot(state.model)], future: [] };
+    state.model.buttons.get(id).states.on = { stateId: 'red', raw: '', dirty: true };
+    store.setState({ model: { ...state.model }, history: state.history });
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true }));
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('green');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'y', ctrlKey: true }));
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('red');
+  });
+
+  it('Ctrl+Shift+Z is treated as redo, not undo', async () => {
+    const id = '5,3';
+    loadModel(new Map([[id, { on: 'green' }]]));
+    await fixture(html`<app-root></app-root>`);
+    const state = store.getState();
+    state.history = { past: [snapshot(state.model)], future: [] };
+    state.model.buttons.get(id).states.on = { stateId: 'red', raw: '', dirty: true };
+    store.setState({ model: { ...state.model }, history: state.history });
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true }));
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('green');
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, shiftKey: true }));
+    expect(store.getState().model.buttons.get(id).states.on.stateId).to.equal('red');
+  });
+});
+
+function snapshot(model) {
+  const out = new Map();
+  for (const [id, b] of model.buttons) {
+    out.set(id, {
+      off:  b.states.off  ? { ...b.states.off  } : null,
+      on:   b.states.on   ? { ...b.states.on   } : null,
+      fade: b.states.fade ? { ...b.states.fade } : null,
+    });
+  }
+  return out;
+}
+
 describe('keyboard shortcuts (Ctrl+C / Ctrl+V) on <app-root>', () => {
   afterEach(() => reset());
 
