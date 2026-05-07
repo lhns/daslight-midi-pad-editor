@@ -62,6 +62,30 @@ describe('<help-dialog>', () => {
     }
   });
 
+  it('the body scrolls internally without overflowing the dialog (no bottom cut-off)', async () => {
+    const wrap = await fixture(html`
+      <div style="height: 400px; width: 600px;">
+        <help-dialog></help-dialog>
+      </div>
+    `);
+    const el = wrap.querySelector('help-dialog');
+    el.open();
+    await el.updateComplete;
+    await new Promise((r) => requestAnimationFrame(() => r()));
+    const dlg = el.shadowRoot.querySelector('dialog');
+    const body = el.shadowRoot.querySelector('.body');
+    // Dialog is capped (80vh of viewport, here we just want it bounded).
+    expect(dlg.clientHeight).to.be.greaterThan(0);
+    // Body content overflows → scroll engaged.
+    expect(body.scrollHeight).to.be.greaterThan(body.clientHeight);
+    // Crucially: body's bottom does not extend past the dialog's bottom edge,
+    // so the overflow:hidden on the dialog doesn't clip any content. 2-px
+    // tolerance covers sub-pixel rounding plus the 1-px dialog border.
+    const bRect = body.getBoundingClientRect();
+    const dRect = dlg.getBoundingClientRect();
+    expect(bRect.bottom).to.be.at.most(dRect.bottom + 2);
+  });
+
   it('is idempotent — calling open() twice does not throw', async () => {
     const el = await fixture(html`<help-dialog></help-dialog>`);
     el.open();

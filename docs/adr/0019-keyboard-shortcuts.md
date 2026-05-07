@@ -69,6 +69,13 @@ Mac and Windows / Linux modifiers are shown together (`Ctrl / ⌘`)
 to avoid platform detection. The `<help-dialog>` lives in
 `src/components/help-dialog.js`; toolbar embeds it as a Lit child.
 
+Layout: `dialog` is `display: flex; flex-direction: column`. The body
+is `flex: 1 1 auto; min-height: 0; overflow-y: auto`, so it always
+takes exactly the remaining space inside the dialog and scrolls
+internally — no magic-number subtraction of an estimated head height,
+which previously could clip the bottom of the content when the head
+rendered slightly taller than expected.
+
 ## Update — Ctrl+V never falls back across slots (ADR 0026)
 Per-section Paste in the inspector uses a resolver that falls back
 across slots when the target's own slot is empty. `pasteVisible`

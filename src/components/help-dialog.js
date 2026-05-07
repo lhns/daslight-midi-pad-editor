@@ -19,9 +19,16 @@ export class HelpDialog extends LitElement {
         max-height: 80vh;
         overflow: hidden;
         font: inherit;
+        /* Flex layout so the body can claim "all remaining space" inside the
+           dialog and scroll on its own — without that, the previous
+           max-height: calc(80vh - 60px) magic-number on .body could clip the
+           bottom whenever the actual head height drifted from the estimate. */
+        display: flex;
+        flex-direction: column;
       }
       dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
       .head {
+        flex: 0 0 auto;
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -34,9 +41,10 @@ export class HelpDialog extends LitElement {
         flex: 1;
       }
       .body {
-        padding: 1rem;
+        flex: 1 1 auto;
+        min-height: 0;          /* required so overflow-y: auto actually engages */
         overflow-y: auto;
-        max-height: calc(80vh - 60px);
+        padding: 1rem;
       }
       section + section { margin-top: 1.25rem; }
       section h3 {
