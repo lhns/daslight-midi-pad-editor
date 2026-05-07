@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { store } from '../state/store.js';
 import { downloadCurrent, fixDeviceOut, loadFile, switchActiveProfile } from '../state/actions.js';
 import { buttonStyles } from '../styles/buttons.js';
+import './help-dialog.js';
 
 export class Toolbar extends LitElement {
   static properties = {
@@ -25,6 +26,14 @@ export class Toolbar extends LitElement {
       .device { color: var(--muted); font-size: 0.85rem; }
       .device-tabs { display: flex; gap: 6px; }
       input[type=file] { display: none; }
+      .help {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 50%;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
       .banner {
         display: flex; align-items: center; gap: 0.75rem;
         padding: 0.6rem 1rem;
@@ -66,7 +75,9 @@ export class Toolbar extends LitElement {
           </div>
         ` : (hasDoc ? html`<span class="device">${this._state.profile?.label ?? ''}</span>` : null)}
         <span class="filename">${hasDoc ? (this.fileName ?? '') : ''}</span>
+        <button class="help" type="button" title="Keyboard shortcuts" aria-label="Keyboard shortcuts" @click=${() => this._openHelp()}>?</button>
       </div>
+      <help-dialog></help-dialog>
       ${showBanner ? html`
         <div class="banner">
           <span>${fixable.length} entries have a non-canonical DEVICEOUT. "Fix all" sets each row's DEVICEOUT to match its input device.</span>
@@ -78,6 +89,9 @@ export class Toolbar extends LitElement {
 
   _openPicker() {
     this.renderRoot.querySelector('input[type=file]').click();
+  }
+  _openHelp() {
+    this.renderRoot.querySelector('help-dialog')?.open();
   }
   async _onPick(e) {
     const f = e.target.files?.[0];

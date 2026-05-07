@@ -53,6 +53,22 @@ button label flips to "Copy selected" whenever the pill filter is
 active, hinting that the result will be partial. See ADR 0014 for the
 panel-side write-up.
 
+## Update — Help dialog surfaces every shortcut
+The toolbar now carries a small round `?` button at the right edge,
+always visible (even before a file is loaded — Help must be reachable
+from the empty state). Clicking opens `<help-dialog>`, a native
+`<dialog>` element shown via `showModal()`. The browser handles the
+top-layer, the focus trap, and Esc-to-close; backdrop-click to close
+is wired manually (a click whose target IS the dialog itself, rather
+than a child, is treated as a backdrop click).
+
+The dialog content lists every shortcut documented in this ADR plus
+those from 0023 (selection rectangle) and 0026 (paste fallback),
+grouped by purpose: Selection, Edit, Copy & paste, History, File.
+Mac and Windows / Linux modifiers are shown together (`Ctrl / ⌘`)
+to avoid platform detection. The `<help-dialog>` lives in
+`src/components/help-dialog.js`; toolbar embeds it as a Lit child.
+
 ## Update — Ctrl+V never falls back across slots (ADR 0026)
 Per-section Paste in the inspector uses a resolver that falls back
 across slots when the target's own slot is empty. `pasteVisible`

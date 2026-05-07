@@ -47,6 +47,23 @@ describe('<app-toolbar>', () => {
     expect(el.shadowRoot.querySelector('.filename').textContent.trim()).to.equal('');
   });
 
+  it('always shows a "?" help button (even without a loaded document)', async () => {
+    const el = await fixture(html`<app-toolbar></app-toolbar>`);
+    await el.updateComplete;
+    const help = el.shadowRoot.querySelector('.bar button.help');
+    expect(help).to.exist;
+    expect(help.textContent.trim()).to.equal('?');
+  });
+
+  it('clicking the "?" button opens the help dialog', async () => {
+    const el = await fixture(html`<app-toolbar></app-toolbar>`);
+    await el.updateComplete;
+    el.shadowRoot.querySelector('.bar button.help').click();
+    await el.updateComplete;
+    const dlg = el.shadowRoot.querySelector('help-dialog').shadowRoot.querySelector('dialog');
+    expect(dlg.open).to.equal(true);
+  });
+
   it('renders a hidden file input that the Open file button triggers', async () => {
     const el = await fixture(html`<app-toolbar></app-toolbar>`);
     await el.updateComplete;
