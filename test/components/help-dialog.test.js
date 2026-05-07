@@ -2,11 +2,31 @@ import { expect, fixture, html } from '@open-wc/testing';
 import '../../src/components/help-dialog.js';
 
 describe('<help-dialog>', () => {
-  it('is closed by default', async () => {
+  it('is closed by default and computes to display: none (not visible)', async () => {
     const el = await fixture(html`<help-dialog></help-dialog>`);
     const dlg = el.shadowRoot.querySelector('dialog');
     expect(dlg).to.exist;
     expect(dlg.open).to.equal(false);
+    // The native <dialog> defaults to display:none when closed. If a CSS rule
+    // accidentally overrides that (e.g. an unscoped `dialog { display: flex }`),
+    // the dialog stays visible in the page background — which is what we are
+    // guarding against here.
+    expect(getComputedStyle(dlg).display).to.equal('none');
+    // Bounding-rect sanity: nothing rendered.
+    const r = dlg.getBoundingClientRect();
+    expect(r.width).to.equal(0);
+    expect(r.height).to.equal(0);
+  });
+
+  it('after close(), computes back to display: none', async () => {
+    const el = await fixture(html`<help-dialog></help-dialog>`);
+    el.open();
+    await el.updateComplete;
+    el.close();
+    await el.updateComplete;
+    const dlg = el.shadowRoot.querySelector('dialog');
+    expect(dlg.open).to.equal(false);
+    expect(getComputedStyle(dlg).display).to.equal('none');
   });
 
   it('opens via .open() and closes via the close button', async () => {

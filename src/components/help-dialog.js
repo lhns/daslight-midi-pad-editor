@@ -19,10 +19,11 @@ export class HelpDialog extends LitElement {
         max-height: 80vh;
         overflow: hidden;
         font: inherit;
-        /* Flex layout so the body can claim "all remaining space" inside the
-           dialog and scroll on its own — without that, the previous
-           max-height: calc(80vh - 60px) magic-number on .body could clip the
-           bottom whenever the actual head height drifted from the estimate. */
+      }
+      /* Scope display:flex to the OPEN state — without [open] the rule
+         overrides the native dialog's default display:none and the dialog
+         stays visible (and blocks the page) even when closed. */
+      dialog[open] {
         display: flex;
         flex-direction: column;
       }
