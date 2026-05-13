@@ -23,3 +23,27 @@ artifact is the deliverable.
 ## Consequences
 - Releases double as a versioned download index for the editor.
 - The `build` job depends on `test` — broken tests block artifact upload.
+
+## Update — GitHub mirror
+The repo is also mirrored to `https://github.com/lhns/daslight-midi-pad-editor.git`.
+`.github/workflows/ci.yml` is the GitHub-Actions equivalent of the
+Gitea workflow — functionally identical (test → build → artifact, plus
+tag → release). Provider differences:
+
+- `actions/upload-artifact@v4` (not `@v3`, which is deprecated on
+  GitHub since January 2025).
+- Release step uses `softprops/action-gh-release@v2` instead of
+  `akkuman/gitea-release-action@v1`; picks up the implicit
+  `GITHUB_TOKEN`.
+- Explicit `permissions: contents: write` at the build job so the
+  release step can create / update the GitHub release. GitHub's
+  default token permissions are read-only.
+- `cache: 'npm'` on `actions/setup-node@v4` for faster reruns
+  (relies on the committed `package-lock.json`).
+- `concurrency: { group: ci-${{ github.ref }}, cancel-in-progress:
+  true }` so push-on-push to the same ref cancels older runs.
+
+Both workflow files coexist: a push to Gitea triggers the Gitea
+workflow; a push to GitHub triggers the GitHub one. The Gitea
+workflow could later pick up the cache and concurrency improvements
+if useful.

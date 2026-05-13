@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Upload single-HTML artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: daslight-midi-pad-editor-html
+          path: dist/daslight-midi-pad-editor.html
+          if-no-files-found: error
+      - name: Attach to release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/daslight-midi-pad-editor.html
