@@ -5,6 +5,8 @@ controller. The mapping (scene ↔ button) is done in Daslight first; this tool
 focuses on the **LED appearance** — color and animation mode for the three
 control states **Off / On / Fade** of every button on a 9×9 matrix.
 
+![Screenshot of the editor](docs/screenshot.png)
+
 ## Supported devices
 
 - **Novation Launchpad Mini MK3** — 80 buttons, 64-color palette × 3 modes
