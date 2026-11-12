@@ -1,4 +1,4 @@
-// Auto-derived from docs/launchpad_7bit_colors.txt — keep in sync.
+// Auto-derived from docs/launchpad_7bit_colors.txt â€” keep in sync.
 // Indices 0..63 of the Launchpad Mini MK3 7-bit color palette.
 export const PALETTE = [
   { index: 0, hex: '#000000', name: 'off' },

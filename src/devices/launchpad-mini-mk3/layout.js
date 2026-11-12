@@ -1,4 +1,4 @@
-// Auto-derived from docs/every-button.xml — keep in sync.
+// Auto-derived from docs/every-button.xml â€” keep in sync.
 // Note encoding: tens digit = row (1=bottom, 8=top), ones digit = col (1=left, 8=right).
 // Round buttons: top row notes 91..98 (row=9), right column notes 19..89 (col=9).
 export const LAYOUT = [
